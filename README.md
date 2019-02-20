@@ -1,3 +1,7 @@
+# Pofadder
+
+v0 - fork - 2019-02-20
+
 ## battlesnake-go
 
 A simple [Battlesnake AI](http://battlesnake.io) written in Go.
