@@ -6,7 +6,7 @@
     "jstolp"
   ],
   "website": "http://battlesnake.io",
-  "repository": "https://github.com/jstolp/starter-snake-go",
+  "repository": "https://github.com/jstolp/pofadder-go",
   "env": {
     "BUILDPACK_URL": "https://github.com/kr/heroku-buildpack-go"
   }
