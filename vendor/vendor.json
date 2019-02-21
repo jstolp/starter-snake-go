@@ -6,6 +6,12 @@
 	"ignore": "test",
 	"package": [
 		{
+			"checksumSHA1": "WDcVWDtHun6YjZ5ImyORwp2qGxY=",
+			"path": "github.com/ghodss/yaml",
+			"revision": "25d852aebe32c875e9c044af3eef9c7dc6bc777f",
+			"revisionTime": "2019-02-12T21:16:48Z"
+		},
+		{
 			"checksumSHA1": "Nl8u5pNlN3FyZ/ieMgodi/+vp38=",
 			"path": "github.com/tkanos/gonfig",
 			"revision": "896f3d81fadfe082262467a1c22fd43278806a02",
