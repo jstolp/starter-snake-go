@@ -7,6 +7,7 @@ import (
 	"github.com/tkanos/gonfig"
 	"math/rand"
 	"fmt"
+	"strconv"
 )
 
 func Info(res http.ResponseWriter, req *http.Request) {
@@ -16,9 +17,9 @@ func Info(res http.ResponseWriter, req *http.Request) {
 		log.Printf("Bad configuration in config.json: %v", errConf)
 	}
 	res.WriteHeader(http.StatusOK)
+	randIntString := strconv.Itoa(rand.Intn(100))
 	res.Write([]byte("Jay's battleSnake " + configuration.Home_Route))
-	res.Write([]byte("Jay's battleSnake int: " + rand.Intn(100)))
-	res.Write([]byte("Jay's battleSnake " + configuration.Home_Route))
+	res.Write([]byte("Jay's battleSnake int: " + randIntString))
 	fmt.Print(rand.Intn(100))
  	fmt.Println()
 }
