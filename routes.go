@@ -31,8 +31,8 @@ func Start(res http.ResponseWriter, req *http.Request) {
 
 	respond(res, api.StartResponse{
 		Color: "#ffffff",
-		/* HeadType: "dead",
-		TailType: "bolt", */
+		HeadType: "dead",
+		TailType: "bolt",
 	})
 
 }
