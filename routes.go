@@ -18,10 +18,9 @@ func Info(res http.ResponseWriter, req *http.Request) {
 	}
 	res.WriteHeader(http.StatusOK)
 	randIntString := strconv.Itoa(rand.Intn(100))
-	res.Write([]byte("Jay's battleSnake " + configuration.Home_Route + "<br>"))
-	res.Write([]byte("Jay's battleSnake int: " + randIntString))
-	fmt.Print(rand.Intn(100))
- 	fmt.Println()
+	res.Write([]byte("<!doctype html><html lang=en><head><meta charset=utf-8><title>"+
+		configuration.Home_Route + "</title></head><body><p>" +
+		randIntString + "</p></body></html>"))
 }
 
 func Index(res http.ResponseWriter, req *http.Request) {
