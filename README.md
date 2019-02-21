@@ -1,6 +1,6 @@
 # Pofadder
 
-v1 - start modding - 2019-02-21
+v1 - start modding - 2019-02-21  
 v0 - fork - 2019-02-20
 
 ## battlesnake-go
