@@ -1,6 +1,7 @@
 {
 	"comment": "For other heroku options see: https://devcenter.heroku.com/articles/go-dependencies-via-govendor#build-configuration",
 	"heroku": {
+		"goVersion": "go1.11.5",
 		"sync": false
 	},
 	"ignore": "test",
