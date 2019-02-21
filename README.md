@@ -1,7 +1,13 @@
 # Pofadder
 
+## Changelog
+v1 - start modding - 2019-02-21  
 v0 - fork - 2019-02-20
 
+
+
+Orginal Readme below.
+---
 ## battlesnake-go
 
 A simple [Battlesnake AI](http://battlesnake.io) written in Go.
