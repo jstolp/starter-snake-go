@@ -3,13 +3,16 @@ package main
 import (
 	"log"
 	"net/http"
-	"github.com/jstolp/pofadder-go/api"
+	"./api"
 	"github.com/tkanos/gonfig"
 )
 
 func Index(res http.ResponseWriter, req *http.Request) {
 	configuration := api.Configuration{}
-	err := gonfig.GetConf("config/config.json", &configuration)
+	errConf := gonfig.GetConf("config/config.json", &configuration)
+	if errConf != nil {
+		log.Printf("Bad configuration in config.json: %v", errConf)
+	}
 	res.WriteHeader(http.StatusOK)
 	res.Write([]byte("Jay's battleSnake " + configuration.Home_Route))
 }
