@@ -8,12 +8,16 @@ install:
 .PHONY: install
 
 run: install
-	pofadder-go server
+	./pofadder-go server
 .PHONY: run
 
 test:
 	go test ./...
 .PHONY: test
+
+do:
+	@echo ">> Doing it for ya, master..."
+.PHONY: do
 
 fmt:
 	@echo ">> Running Gofmt.."
