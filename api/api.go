@@ -6,10 +6,8 @@ import (
 )
 /* via github.com/tkanos/gonfig */
 type Configuration struct {
-    Port              int
-    Static_Variable   string
+    Port       int
 		Home_Route string
-    Connection_String string
 }
 
 /* snakeAPi jay (with head and tail type) */

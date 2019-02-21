@@ -61,8 +61,8 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Printf("Bad move request: %v", err)
 	}
-	dump(decoded)
-
+	dump(decoded.You)
+	
 	respond(res, api.MoveResponse{
 		Move: "down",
 	})
