@@ -1,12 +1,12 @@
 {
-  "name": "battlesnake-go",
+  "name": "pofadder-go",
   "description": "A simple BattleSnake AI written in Go..",
   "keywords": [
     "battlesnake",
-    "sendwithus"
+    "jstolp"
   ],
   "website": "http://battlesnake.io",
-  "repository": "https://github.com/sendwithus/battlesnake-go",
+  "repository": "https://github.com/jstolp/starter-snake-go",
   "env": {
     "BUILDPACK_URL": "https://github.com/kr/heroku-buildpack-go"
   }
