@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
-	"./api"
+	"github.com/jstolp/pofadder-go/api"
 	"github.com/tkanos/gonfig"
 )
 
