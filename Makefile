@@ -8,7 +8,7 @@ install:
 .PHONY: install
 
 run: install
-	starter-snake-go server
+	pofadder-go server
 .PHONY: run
 
 test:
