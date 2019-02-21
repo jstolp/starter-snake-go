@@ -18,7 +18,7 @@ func Info(res http.ResponseWriter, req *http.Request) {
 	}
 	res.WriteHeader(http.StatusOK)
 	randIntString := strconv.Itoa(rand.Intn(100))
-	res.Write([]byte("Jay's battleSnake " + configuration.Home_Route))
+	res.Write([]byte("Jay's battleSnake " + configuration.Home_Route + "<br>"))
 	res.Write([]byte("Jay's battleSnake int: " + randIntString))
 	fmt.Print(rand.Intn(100))
  	fmt.Println()
