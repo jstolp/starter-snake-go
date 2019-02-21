@@ -68,6 +68,20 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	})
 }
 
+func GoToDir(curr Coord, next Coord) string {
+	dir := ""
+	if curr.X < next.X {
+		dir = "right"
+	} else if curr.X > next.X {
+		dir = "left"
+	} else if curr.Y < next.Y {
+		dir = "down"
+	} else if curr.Y > next.Y {
+		dir = "up"
+	}
+	return dir
+}
+
 func End(res http.ResponseWriter, req *http.Request) {
 	return
 }
