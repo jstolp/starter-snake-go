@@ -4,6 +4,13 @@
 		"sync": false
 	},
 	"ignore": "test",
-	"package": [],
+	"package": [
+		{
+			"checksumSHA1": "Nl8u5pNlN3FyZ/ieMgodi/+vp38=",
+			"path": "github.com/tkanos/gonfig",
+			"revision": "896f3d81fadfe082262467a1c22fd43278806a02",
+			"revisionTime": "2018-11-12T18:52:42Z"
+		}
+	],
 	"rootPath": "github.com/jstolp/pofadder-go"
 }
