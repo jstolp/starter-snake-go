@@ -5,7 +5,23 @@ import (
 	"net/http"
 	"github.com/jstolp/pofadder-go/api"
 	"github.com/tkanos/gonfig"
+	"math/rand"
+	"fmt"
 )
+
+func Info(res http.ResponseWriter, req *http.Request) {
+	configuration := api.Configuration{}
+	errConf := gonfig.GetConf("config/config.json", &configuration)
+	if errConf != nil {
+		log.Printf("Bad configuration in config.json: %v", errConf)
+	}
+	res.WriteHeader(http.StatusOK)
+	res.Write([]byte("Jay's battleSnake " + configuration.Home_Route))
+	res.Write([]byte("Jay's battleSnake int: " + rand.Intn(100)))
+	res.Write([]byte("Jay's battleSnake " + configuration.Home_Route))
+	fmt.Print(rand.Intn(100))
+ 	fmt.Println()
+}
 
 func Index(res http.ResponseWriter, req *http.Request) {
 	configuration := api.Configuration{}
@@ -15,6 +31,8 @@ func Index(res http.ResponseWriter, req *http.Request) {
 	}
 	res.WriteHeader(http.StatusOK)
 	res.Write([]byte("Jay's battleSnake " + configuration.Home_Route))
+	fmt.Print(rand.Intn(100))
+ 	fmt.Println()
 }
 /* Battlesnake documentation can be found at <a href=\"https://docs.battlesnake.io\">https://docs.battlesnake.io</a>. */
 
