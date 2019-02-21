@@ -4,7 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 )
+/* via github.com/tkanos/gonfig */
+type Configuration struct {
+    Port              int
+    Static_Variable   string
+		Home_Route string
+    Connection_String string
+}
 
+/* snakeAPi jay (with head and tail type) */
 type Coord struct {
 	X int `json:"x"`
 	Y int `json:"y"`

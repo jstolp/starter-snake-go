@@ -4,11 +4,14 @@ import (
 	"log"
 	"net/http"
 	"github.com/jstolp/pofadder-go/api"
+	"github.com/tkanos/gonfig"
 )
 
 func Index(res http.ResponseWriter, req *http.Request) {
+	configuration := api.Configuration{}
+	err := gonfig.GetConf("config/config.json", &configuration)
 	res.WriteHeader(http.StatusOK)
-	res.Write([]byte("Jay's battleSnake "))
+	res.Write([]byte("Jay's battleSnake " + configuration.Home_Route))
 }
 /* Battlesnake documentation can be found at <a href=\"https://docs.battlesnake.io\">https://docs.battlesnake.io</a>. */
 
