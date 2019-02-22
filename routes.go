@@ -8,16 +8,13 @@ import (
 	"github.com/tkanos/gonfig"
 	"fmt"
 	"math"
-	/* "strconv" */
+	"strconv"
 )
 
-func Ping(res http.ResponseWriter, req *http.Request) {
-	return
-}
-
-func End(res http.ResponseWriter, req *http.Request) {
-	return
-}
+var topBound int = 1
+var leftBound int = 1
+var rightBound int = 0
+var botBound int = 0
 
 func dd(obj interface{}) {
 	data, err := json.MarshalIndent(obj, "", "  ")
@@ -27,36 +24,30 @@ func dd(obj interface{}) {
 }
 
 /* returns SnakeHeadPos COORD*/
-func getHeadPos(target Snake) string {
+func getHeadPos(target Snake) Coord {
 	body := target.Body
-	dd(body)
 
-	/* return sl[len(sl)-1]; */
-	return "nope"
+	bodySlice := make([]Coord, len(body))
+	//dd(bodySlice)
+
+  return (bodySlice[len(bodySlice)-1])
 }
 
-/* returns SnakeTailPos COORD
-func getTailPos()
-{
+func getTailPos(target Snake) Coord {
+	body := target.Body
 
-}
-*/
+	bodySlice := make([]Coord, len(body))
+	dd(bodySlice)
 
-func Index(res http.ResponseWriter, req *http.Request) {
-	/* Battlesnake documentation can be found at <a href=\"https://docs.battlesnake.io\">https://docs.battlesnake.io</a>. */
-	configuration := Configuration{}
-	errConf := gonfig.GetConf("config/config.json", &configuration)
-	if errConf != nil {
-		log.Printf("Bad configuration in config.json: %v", errConf)
-	}
-	res.WriteHeader(http.StatusOK)
-	res.Write([]byte("Jay's battleSnake mk 1 self aware: " + configuration.Home_Route))
+  return (bodySlice[0])
 }
 
 /* heads: "beluga" "bendr" "dead" "evil" "fang" "pixel" "regular" "safe" "sand-worm" "shades" "silly" "smile" "tongue"
 tails: "block-bum" "bolt" "curled" "fat-rattle" "freckled" "hook" "pixel" "regular" "round-bum" "sharp" "skinny" "small-rattle" */
 
 func Start(res http.ResponseWriter, req *http.Request) {
+
+
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 	log.Print("START: start")
 	decoded := SnakeRequest{}
@@ -64,7 +55,11 @@ func Start(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Printf("Bad start request: %v", err)
 	}
-	//dd(decoded)
+
+	rightBound = decoded.Board.Width
+	botBound = decoded.Board.Height
+
+	log.Print("BOARD: top: " + strconv.Itoa(topBound) + " bot: " + strconv.Itoa(botBound) + "left: " + strconv.Itoa(leftBound) + " right " + strconv.Itoa(rightBound))
 
 	respond(res, StartResponse{
 		Color: "#fefefe",
@@ -76,14 +71,17 @@ func Start(res http.ResponseWriter, req *http.Request) {
 
 func Move(res http.ResponseWriter, req *http.Request) {
 	log.Print("MOVE: start \n")
+	move := "down"
 	decoded := SnakeRequest{}
 	err := DecodeSnakeRequest(req, &decoded)
 	if err != nil {
 		log.Printf("Bad move request: %v", err)
 	}
-	dd(decoded.You.Body)
-	getHeadPos(decoded.You)
-	fmt.Print("Going down... \n")
+	headPos := getHeadPos(decoded.You)
+	tailPos := getTailPos(decoded.You)
+	dd(headPos)
+	dd(tailPos)
+	fmt.Print("Going ... " + move + "\n")
 	respond(res, MoveResponse{
 		Move: "down",
 	})
@@ -136,4 +134,25 @@ func invDir(currentDir string) string {
 			dir = "left"
 		}
 		return dir
+}
+
+func Index(res http.ResponseWriter, req *http.Request) {
+	/* Battlesnake documentation can be found at <a href=\"https://docs.battlesnake.io\">https://docs.battlesnake.io</a>. */
+	configuration := Configuration{}
+	errConf := gonfig.GetConf("config/config.json", &configuration)
+	if errConf != nil {
+		log.Printf("Bad configuration in config.json: %v", errConf)
+	}
+	res.WriteHeader(http.StatusOK)
+	res.Write([]byte("Jay's battleSnake mk 1 self aware: " + configuration.Home_Route))
+}
+
+func Ping(res http.ResponseWriter, req *http.Request) {
+	log.Print("PONG to a server ping... \n")
+	return
+}
+
+func End(res http.ResponseWriter, req *http.Request) {
+	log.Print("The game has ended.... \n\n")
+	return
 }
