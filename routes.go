@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"encoding/json"
 	"net/http"
 	. "github.com/jstolp/pofadder-go/api"
 	"github.com/tkanos/gonfig"
@@ -18,10 +19,17 @@ func End(res http.ResponseWriter, req *http.Request) {
 	return
 }
 
+func dd(obj interface{}) {
+	data, err := json.MarshalIndent(obj, "", "  ")
+	if err == nil {
+		log.Printf(string(data))
+	}
+}
+
 /* returns SnakeHeadPos COORD*/
 func getHeadPos(target Snake) string {
 	body := target.Body
-	dump(body)
+	dd(body)
 
 	/* return sl[len(sl)-1]; */
 	return "nope"
@@ -49,37 +57,37 @@ func Index(res http.ResponseWriter, req *http.Request) {
 tails: "block-bum" "bolt" "curled" "fat-rattle" "freckled" "hook" "pixel" "regular" "round-bum" "sharp" "skinny" "small-rattle" */
 
 func Start(res http.ResponseWriter, req *http.Request) {
-	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
+	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 	log.Print("START: start")
 	decoded := SnakeRequest{}
 	err := DecodeSnakeRequest(req, &decoded)
 	if err != nil {
 		log.Printf("Bad start request: %v", err)
 	}
-	dump(decoded)
+	//dd(decoded)
 
 	respond(res, StartResponse{
 		Color: "#fefefe",
 		HeadType: "fang",
 		TailType: "bolt",
 	})
-	log.Print("START: end")
+	log.Print("START: end \n")
 }
 
 func Move(res http.ResponseWriter, req *http.Request) {
-	log.Print("MOVE: start")
+	log.Print("MOVE: start \n")
 	decoded := SnakeRequest{}
 	err := DecodeSnakeRequest(req, &decoded)
 	if err != nil {
 		log.Printf("Bad move request: %v", err)
 	}
-	dump(decoded.You.Body)
+	dd(decoded.You.Body)
 	getHeadPos(decoded.You)
-	fmt.Print("Going down...")
+	fmt.Print("Going down... \n")
 	respond(res, MoveResponse{
 		Move: "down",
 	})
-	log.Print("MOVE: end")
+	log.Print("MOVE: end \n\n")
 }
 /*
 var prevDir := "na"
