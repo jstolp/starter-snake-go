@@ -8,6 +8,7 @@ install:
 .PHONY: install
 
 run: install
+	go build
 	./pofadder-go server
 .PHONY: run
 
@@ -17,6 +18,9 @@ test:
 
 do:
 	@echo ">> Doing it for ya, master..."
+	go build -v
+	@echo ">> build completed"
+	./pofadder-go server
 .PHONY: do
 
 fmt:

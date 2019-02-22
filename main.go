@@ -12,16 +12,15 @@ func main() {
 	http.HandleFunc("/move", Move)
 	http.HandleFunc("/end", End)
 	http.HandleFunc("/ping", Ping)
-	http.HandleFunc("/info", Info)
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "9000"
 	}
 
-	// Add filename into logging messages
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	// Add filename into logging messages, and MICO SECS
+	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 
-	log.Printf("Running jSnake Server on port %s...\n", port)
+	log.Printf("Running jSnake Server on port %s...\n copy&paste http://localhost:%s", port, port)
 	http.ListenAndServe(":"+port, LoggingHandler(http.DefaultServeMux))
 }
