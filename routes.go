@@ -3,10 +3,11 @@ package main
 import (
 	"log"
 	"net/http"
-	"github.com/jstolp/pofadder-go/api"
-	"math/rand"
+	. "github.com/jstolp/pofadder-go/api"
+	"github.com/tkanos/gonfig"
 	"fmt"
-	"strconv"
+	"math"
+	/* "strconv" */
 )
 
 func Ping(res http.ResponseWriter, req *http.Request) {
@@ -20,50 +21,54 @@ func End(res http.ResponseWriter, req *http.Request) {
 
 func Index(res http.ResponseWriter, req *http.Request) {
 	/* Battlesnake documentation can be found at <a href=\"https://docs.battlesnake.io\">https://docs.battlesnake.io</a>. */
-	/* configuration := api.Configuration{}
+	configuration := Configuration{}
 	errConf := gonfig.GetConf("config/config.json", &configuration)
 	if errConf != nil {
 		log.Printf("Bad configuration in config.json: %v", errConf)
-	}*/
+	}
 	res.WriteHeader(http.StatusOK)
-	res.Write([]byte("Jay's battleSnake mk 1 self aware"))
+	res.Write([]byte("Jay's battleSnake mk 1 self aware: " + configuration.Home_Route))
 }
 
 /* heads: "beluga" "bendr" "dead" "evil" "fang" "pixel" "regular" "safe" "sand-worm" "shades" "silly" "smile" "tongue"
 tails: "block-bum" "bolt" "curled" "fat-rattle" "freckled" "hook" "pixel" "regular" "round-bum" "sharp" "skinny" "small-rattle" */
 
 func Start(res http.ResponseWriter, req *http.Request) {
-	decoded := api.SnakeRequest{}
-	err := api.DecodeSnakeRequest(req, &decoded)
+	log.Print("START: start")
+	decoded := SnakeRequest{}
+	err := DecodeSnakeRequest(req, &decoded)
 	if err != nil {
 		log.Printf("Bad start request: %v", err)
 	}
 	dump(decoded)
 
-	respond(res, api.StartResponse{
+	respond(res, StartResponse{
 		Color: "#fefefe",
 		HeadType: "fang",
 		TailType: "bolt",
 	})
-
+	log.Print("START: end")
 }
 
 func Move(res http.ResponseWriter, req *http.Request) {
-	decoded := api.SnakeRequest{}
-	err := api.DecodeSnakeRequest(req, &decoded)
+	log.Print("MOVE: start")
+	decoded := SnakeRequest{}
+	err := DecodeSnakeRequest(req, &decoded)
 	if err != nil {
 		log.Printf("Bad move request: %v", err)
 	}
 	dump(decoded.You)
-	dump(decoded.You.body[0])
-	respond(res, api.MoveResponse{
+	dump(decoded.You.Body[0])
+	fmt.Print("Going down...")
+	respond(res, MoveResponse{
 		Move: "down",
 	})
+	log.Print("MOVE: end")
 }
 /*
 var prevDir := "na"
 var currentDir := "na"
-var currentPos := api.Coord{}
+var currentPos := Coord{}
 */
 
 /* Dist to function in steps (int) */
@@ -85,8 +90,14 @@ func GoToDir(curr Coord, next Coord) string {
 	}
 	return dir
 }
+
+/*  sl[len(sl)-1] READ LAST SLICE
+sl = sl[:len(sl)-1] RM last SLICE
+https://github.com/golang/go/wiki/SliceTricks
+*/
+
 /* Inverses direction */
-func invDir(currentDir String) string {
+func invDir(currentDir string) string {
 		if(currentDir == "down") {
 			return "up"
 		}
@@ -99,4 +110,5 @@ func invDir(currentDir String) string {
 		if(currentDir == "right") {
 			return "left"
 		}
+		return "invalid"
 }
