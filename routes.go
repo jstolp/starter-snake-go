@@ -16,6 +16,7 @@ var leftBound int = 1
 var rightBound int = 0
 var botBound int = 0
 
+var turn int = 0
 var move string = "down"
 var nextMove string = ""
 var prevMove string = ""
@@ -37,14 +38,14 @@ func getTailPos(target Snake) Coord {
 
 func getHeadPos(target Snake) Coord {
 	body := target.Body
-	dd(body[0])
-  return (body[0])
+  return body[0]
 }
 
 /* heads: "beluga" "bendr" "dead" "evil" "fang" "pixel" "regular" "safe" "sand-worm" "shades" "silly" "smile" "tongue"
 tails: "block-bum" "bolt" "curled" "fat-rattle" "freckled" "hook" "pixel" "regular" "round-bum" "sharp" "skinny" "small-rattle" */
 
 func Start(res http.ResponseWriter, req *http.Request) {
+
 
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
@@ -65,37 +66,33 @@ func Start(res http.ResponseWriter, req *http.Request) {
 		HeadType: "fang",
 		TailType: "bolt",
 	})
-	log.Print("START: end \n")
 }
 
 func isMoveOOB(headPos Coord, direction string) bool {
 	switch direction {
 		case "down":
-			if(headPos.Y + 1 < botBound) {
-								return false
+			if (headPos.Y + 1 < botBound) {
+					return false
 			}
 		case "up":
-			if(headPos.Y - 1 < 1) {
+			if (headPos.Y > 0) {
 				return false
 			}
 		case "left":
-			if(headPos.X - 1 > 1) {
+			if(headPos.X + 1 > 1) {
 				return false
 			}
 		case "right":
 			if(headPos.X + 1 < rightBound) {
-				log.Println("right is INBOUND "+strconv.Itoa(headPos.X + 1) +" < 15")
 				return false
-			} else {
-				log.Println("right is INBOUND "+strconv.Itoa(headPos.X + 1) +" < 15")
 			}
 	}
-	log.Println("currentDir " + direction + " will be OOB")
 return true
 }
 
 func randomNOOBmove(headPos Coord, currentDir string) string {
 
+  //randomInt = rand.Intn(100)
 	switch currentDir {
 		case "down":
 				return "right"
@@ -105,37 +102,33 @@ func randomNOOBmove(headPos Coord, currentDir string) string {
 				return "down"
 		case "right":
 				return "up"
-		default:
-		// random move, except currentDir (because it's assumed OOB)
 	}
-
-return "down"
+	return "down"
 }
 
 func Move(res http.ResponseWriter, req *http.Request) {
-	log.Print("after moving " + prevMove + " MOVE: start \n")
-  nextMove = prevMove
+	nextMove = prevMove
 	decoded := SnakeRequest{}
 	err := DecodeSnakeRequest(req, &decoded)
 	if err != nil {
 		log.Printf("Bad move request: %v", err)
 	}
+	turn = decoded.Turn
+	log.Print("TURN " + strconv.Itoa(turn) + "\n")
+
 	headPos := getHeadPos(decoded.You)
 	nextMoveOOB := isMoveOOB(headPos, nextMove)
-	if(nextMoveOOB) {
-		dd("yes next move is oob")
+	if (nextMoveOOB) {
 		nextMove = randomNOOBmove(headPos, move)
-		log.Print("because next move " + prevMove + " is OOB i will move " + nextMove)
 	}
-	fmt.Print("next move is: " + nextMove)
-	fmt.Println()
+
 	move = nextMove // finalise the move
-	fmt.Print("Final Move is " + move + "\n")
+	fmt.Print("Move: " + move)
+	fmt.Println()
 	respond(res, MoveResponse{
 		Move: move,
 	})
 	prevMove = move // Re-allocate move command to prev/last move\
-	log.Print("MOVE: end \n\n")
 }
 /*
 var prevDir := "na"
