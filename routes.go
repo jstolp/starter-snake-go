@@ -18,6 +18,21 @@ func End(res http.ResponseWriter, req *http.Request) {
 	return
 }
 
+/* returns SnakeHeadPos COORD*/
+func getHeadPos(target Snake) string {
+	body := target.Body
+	dump(body)
+
+	/* return sl[len(sl)-1]; */
+	return "nope"
+}
+
+/* returns SnakeTailPos COORD
+func getTailPos()
+{
+
+}
+*/
 
 func Index(res http.ResponseWriter, req *http.Request) {
 	/* Battlesnake documentation can be found at <a href=\"https://docs.battlesnake.io\">https://docs.battlesnake.io</a>. */
@@ -34,6 +49,7 @@ func Index(res http.ResponseWriter, req *http.Request) {
 tails: "block-bum" "bolt" "curled" "fat-rattle" "freckled" "hook" "pixel" "regular" "round-bum" "sharp" "skinny" "small-rattle" */
 
 func Start(res http.ResponseWriter, req *http.Request) {
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 	log.Print("START: start")
 	decoded := SnakeRequest{}
 	err := DecodeSnakeRequest(req, &decoded)
@@ -57,8 +73,8 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Printf("Bad move request: %v", err)
 	}
-	dump(decoded.You)
-	dump(decoded.You.Body[0])
+	dump(decoded.You.Body)
+	getHeadPos(decoded.You)
 	fmt.Print("Going down...")
 	respond(res, MoveResponse{
 		Move: "down",
@@ -98,17 +114,18 @@ https://github.com/golang/go/wiki/SliceTricks
 
 /* Inverses direction */
 func invDir(currentDir string) string {
+		dir := ""
 		if(currentDir == "down") {
-			return "up"
+				dir = "up"
 		}
 		if(currentDir == "up") {
-			return "down"
+			dir = "down"
 		}
 		if(currentDir == "left") {
-			return "right"
+			dir = "right"
 		}
 		if(currentDir == "right") {
-			return "left"
+			dir = "left"
 		}
-		return "invalid"
+		return dir
 }

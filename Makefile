@@ -17,6 +17,9 @@ test:
 
 do:
 	@echo ">> Doing it for ya, master..."
+	go build -v
+	@echo ">> build completed"
+	./pofadder-go server
 .PHONY: do
 
 fmt:

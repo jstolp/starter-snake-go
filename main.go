@@ -18,8 +18,8 @@ func main() {
 		port = "9000"
 	}
 
-	// Add filename into logging messages
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	// Add filename into logging messages, and MICO SECS
+	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 
 	log.Printf("Running jSnake Server on port %s...\n", port)
 	http.ListenAndServe(":"+port, LoggingHandler(http.DefaultServeMux))
