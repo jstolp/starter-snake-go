@@ -8,6 +8,7 @@ install:
 .PHONY: install
 
 run: install
+	go build
 	./pofadder-go server
 .PHONY: run
 
