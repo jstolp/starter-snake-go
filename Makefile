@@ -7,7 +7,7 @@ install:
 	go install github.com/jstolp/pofadder-go
 .PHONY: install
 
-run: install
+run:
 	go build
 	./pofadder-go server
 .PHONY: run
