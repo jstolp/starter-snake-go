@@ -62,7 +62,7 @@ func Start(res http.ResponseWriter, req *http.Request) {
 	log.Print("BOARD: top: " + strconv.Itoa(topBound) + " bot: " + strconv.Itoa(botBound) + "left: " + strconv.Itoa(leftBound) + " right " + strconv.Itoa(rightBound))
 
 	respond(res, StartResponse{
-		Color: "#fefefe",
+		Color: "#00ff55",
 		HeadType: "fang",
 		TailType: "bolt",
 	})
