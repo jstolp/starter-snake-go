@@ -16,6 +16,7 @@ type Coord struct {
 	Y int `json:"y"`
 }
 
+
 type Snake struct {
 	ID     string  `json:"id"`
 	Name   string  `json:"name"`
@@ -51,10 +52,22 @@ type MoveResponse struct {
 	Move string `json:"move"`
 }
 
+/* really need this???
+type CoordList []Coord
+
+func (list *CoordList) UnmarshalJSON(data []byte) error {
+	var obj struct {
+		Data []Coord `json:"data"`
+	}
+	if err := json.Unmarshal(data, &obj); err != nil {
+		return err
+	}
+	*list = obj.Data
+	return nil
+}
+*/
+
 func DecodeSnakeRequest(req *http.Request, decoded *SnakeRequest) error {
 	err := json.NewDecoder(req.Body).Decode(&decoded)
 	return err
 }
-
-type CoordList []Coord
-

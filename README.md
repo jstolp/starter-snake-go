@@ -1,12 +1,25 @@
 # Pofadder
 
+De Gewone (Domme) PofAdder
+
+
 ## Changelog
+
+### v0.2.x
+
+v0.2
+ - Self Awwareness... doesn't crash into tail.
+
+Mark II - Self AWARE
+
+### v0.1.x - De Gewone (Domme) PofAdder
 
 v0.1.5
  2019-02-22 21:00
  Cleanup, NOOB Random moves.
 v0.1.0
 
+Mark I - Wall aware
   Finally one that didn't crash a wall...
 
 v1 - Updated, so that the snake can avoid the wallzzzz... MARK-1
