@@ -134,12 +134,16 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// if im bigger... i can't do the edge snake strategy...
-  if (myLength >= edgeSnakeLimit) {
-			log.Println("My current length is over the EDGE LIMIT")
+  if (myLength == edgeSnakeLimit) {
+			log.Println("CirleJerk... Infinity SNAKEEE... let's switch the strat.")
 	}
 
+	if (myLength > edgeSnakeLimit) {
+			log.Println("DEATH DEATH DEATH TAILCRASH")
+	}
 	if (enemySnakes < 1) {
-		log.Print("SOLO " + strconv.Itoa(turn) + "MY LENGTH: " + strconv.Itoa(myLength) +" h: "+ strconv.Itoa(health) + "\n")
+		log.Print("TURN " + strconv.Itoa(turn))
+		//log.Print("SOLO " + strconv.Itoa(turn) + "MY LENGTH: " + strconv.Itoa(myLength) +" h: "+ strconv.Itoa(health) + "\n")
 	} else {
 		log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
 	}
