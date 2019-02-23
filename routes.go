@@ -11,8 +11,6 @@ import (
 	"strconv"
 )
 
-var topBound int = 1
-var leftBound int = 1
 var rightBound int = 0
 var botBound int = 0
 
@@ -22,7 +20,11 @@ var nextMove string = ""
 var prevMove string = ""
 var headPos Coord
 var tailPos Coord
-
+var health int = 100;
+var numOfStartingSnakes int = 1;
+var numSnakesLeft int = 1;
+var enemySnakes int = 0;
+var foodPointList []Coord;
 
 func dd(obj interface{}) {
 	data, err := json.MarshalIndent(obj, "", "  ")
@@ -45,26 +47,29 @@ func getHeadPos(target Snake) Coord {
 tails: "block-bum" "bolt" "curled" "fat-rattle" "freckled" "hook" "pixel" "regular" "round-bum" "sharp" "skinny" "small-rattle" */
 
 func Start(res http.ResponseWriter, req *http.Request) {
-
-
-
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
-	log.Print("START: start")
 	decoded := SnakeRequest{}
 	err := DecodeSnakeRequest(req, &decoded)
 	if err != nil {
 		log.Printf("Bad start request: %v", err)
 	}
 
+  //foodPointList := decoded.Board.Food
+  numOfStartingSnakes = len(decoded.Board.Snakes)
 	rightBound = decoded.Board.Width
 	botBound = decoded.Board.Height
 
-	log.Print("BOARD: top: " + strconv.Itoa(topBound) + " bot: " + strconv.Itoa(botBound) + "left: " + strconv.Itoa(leftBound) + " right " + strconv.Itoa(rightBound))
+	log.Print("BOARD Size: " + strconv.Itoa(botBound) + " by " + strconv.Itoa(rightBound))
+	log.Println("")
+	log.Print("Enemy Snakes: " + strconv.Itoa(numOfStartingSnakes - 1) + "\n\n")
 
+	if(numOfStartingSnakes == 1) {
+		log.Print("It's Gonna be a SOLO GAME \n")
+	}
 	respond(res, StartResponse{
 		Color: "#00ff55",
-		HeadType: "fang",
-		TailType: "bolt",
+		HeadType: "tongue",
+		TailType: "curled",
 	})
 }
 
@@ -87,7 +92,17 @@ func isMoveOOB(headPos Coord, direction string) bool {
 				return false
 			}
 	}
-return true
+	return true
+}
+
+func minDistFood(headPos Coord, food []Coord) Coord {
+	min := food[0]
+	for _, f := range food {
+		if dist(min, headPos) < dist(f, headPos) {
+			min = f
+		}
+	}
+	return min
 }
 
 func randomNOOBmove(headPos Coord, currentDir string) string {
@@ -113,8 +128,13 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Printf("Bad move request: %v", err)
 	}
+	foodPointList = decoded.Board.Food
+	health = decoded.You.Health
+	//foodPointList := decoded.Board.Food
+	numSnakesLeft = len(decoded.Board.Snakes)
+	enemySnakes = numSnakesLeft - 1
 	turn = decoded.Turn
-	log.Print("TURN " + strconv.Itoa(turn) + "\n")
+	log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
 
 	headPos := getHeadPos(decoded.You)
 	nextMoveOOB := isMoveOOB(headPos, nextMove)
@@ -122,6 +142,17 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		nextMove = randomNOOBmove(headPos, move)
 	}
 
+	if (health < 30) {
+		closestFoodPoint := minDistFood(headPos,foodPointList)
+		log.Print("Im going to die of starvation in " + strconv.Itoa(health) + " turns \n\n")
+		foodDir := goToDir(headPos,closestFoodPoint)
+
+		if(!isMoveOOB(headPos, foodDir)) {
+				nextMove = foodDir
+		} else {
+				nextMove = randomNOOBmove(headPos, move)
+		}
+	}
 	move = nextMove // finalise the move
 	fmt.Print("Move: " + move)
 	fmt.Println()
@@ -142,7 +173,7 @@ func dist(a Coord, b Coord) int {
 }
 
 /* move from coord to coord -> returns MOVE */
-func GoToDir(curr Coord, next Coord) string {
+func goToDir(curr Coord, next Coord) string {
 	dir := ""
 	if curr.X < next.X {
 		dir = "right"
