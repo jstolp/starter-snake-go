@@ -26,23 +26,6 @@ var numSnakesLeft int = 1;
 var enemySnakes int = 0;
 var foodPointList []Coord;
 
-func dd(obj interface{}) {
-	data, err := json.MarshalIndent(obj, "", "  ")
-	if err == nil {
-		log.Printf(string(data))
-	}
-}
-
-func getTailPos(target Snake) Coord {
-	body := target.Body
-  return body[len(body) - 1]
-}
-
-func getHeadPos(target Snake) Coord {
-	body := target.Body
-  return body[0]
-}
-
 /* heads: "beluga" "bendr" "dead" "evil" "fang" "pixel" "regular" "safe" "sand-worm" "shades" "silly" "smile" "tongue"
 tails: "block-bum" "bolt" "curled" "fat-rattle" "freckled" "hook" "pixel" "regular" "round-bum" "sharp" "skinny" "small-rattle" */
 
@@ -66,13 +49,17 @@ func Start(res http.ResponseWriter, req *http.Request) {
 	if(numOfStartingSnakes == 1) {
 		log.Print("It's Gonna be a SOLO GAME \n")
 	}
+	/*
+	 e19c41 - orange test 2
+   00ff55 - green
+   ff4f00 - orange test 1 -nee te rood
+	*/
 	respond(res, StartResponse{
-		Color: "#00ff55",
+		Color: "#e19c41",
 		HeadType: "tongue",
 		TailType: "curled",
 	})
 }
-
 func isMoveOOB(headPos Coord, direction string) bool {
 	switch direction {
 		case "down":
@@ -142,8 +129,10 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		nextMove = randomNOOBmove(headPos, move)
 	}
 
+
 	if (health < 30) {
 		closestFoodPoint := minDistFood(headPos,foodPointList)
+		dd(closestFoodPoint)
 		log.Print("Im going to die of starvation in " + strconv.Itoa(health) + " turns \n\n")
 		foodDir := goToDir(headPos,closestFoodPoint)
 
@@ -153,14 +142,58 @@ func Move(res http.ResponseWriter, req *http.Request) {
 				nextMove = randomNOOBmove(headPos, move)
 		}
 	}
-	move = nextMove // finalise the move
-	fmt.Print("Move: " + move)
+
+	if (isNextMoveFatal(10, headPos, prevMove, nextMove)) {
+		// last ditch effort to correct...
+		move = invDir(nextMove)
+	} else {
+		move = nextMove // finalise the move
+	}
+
+	fmt.Print(strconv.Itoa(turn) + "Move: " + move)
 	fmt.Println()
 	respond(res, MoveResponse{
 		Move: move,
 	})
 	prevMove = move // Re-allocate move command to prev/last move\
 }
+
+
+func isNextMoveFatal(health int, headPos Coord, currentDir string, targetDir string) bool {
+    // doing a 180 is never safe, so check for that...
+
+		flipDir := invDir(currentDir)
+		if(flipDir == targetDir) {
+			log.Print("The move is " + targetDir + "but in going " + currentDir + "That would be fatal...\n")
+			return true
+		}
+		// check if a move is NOT_OUT_OF_BOUNDS (hit a wall) WALL SNAKE
+		if (isMoveOOB(headPos, targetDir)) {
+			log.Print("Next Move is Fatal because of a BOUNDARY " + targetDir + "\n")
+			return true
+		}
+
+		if (health == 1) {
+			log.Print("Dag Mooie Wereld... Hongersnood is geen grapje... \n\n")
+			return true
+		}
+
+		log.Print("The move " + targetDir + " is safe...\n")
+		return false
+}
+
+
+// see if i can attach these methods to the struct Snake or something..
+func getHeadPos(target Snake) Coord {
+	body := target.Body
+  return body[0]
+}
+func getTailPos(target Snake) Coord {
+	body := target.Body
+  return body[len(body) - 1]
+}
+
+
 /*
 var prevDir := "na"
 var currentDir := "na"
@@ -171,6 +204,8 @@ var currentPos := Coord{}
 func dist(a Coord, b Coord) int {
 	return int(math.Abs(float64(b.X-a.X)) + math.Abs(float64(b.Y-a.Y)))
 }
+
+
 
 /* move from coord to coord -> returns MOVE */
 func goToDir(curr Coord, next Coord) string {
@@ -210,6 +245,15 @@ func invDir(currentDir string) string {
 		return dir
 }
 
+// just a testing function to dump a object../
+func dd(obj interface{}) {
+	data, err := json.MarshalIndent(obj, "", "  ")
+	if err == nil {
+		log.Printf(string(data))
+	}
+}
+
+// Extra route
 func Index(res http.ResponseWriter, req *http.Request) {
 	/* Battlesnake documentation can be found at <a href=\"https://docs.battlesnake.io\">https://docs.battlesnake.io</a>. */
 	configuration := Configuration{}
@@ -218,7 +262,7 @@ func Index(res http.ResponseWriter, req *http.Request) {
 		log.Printf("Bad configuration in config.json: %v", errConf)
 	}
 	res.WriteHeader(http.StatusOK)
-	res.Write([]byte("Jay's battleSnake mk 1 self aware: " + configuration.Home_Route))
+	res.Write([]byte("Jay's battleSnake mk 2 self aware: " + configuration.Home_Route))
 }
 
 func Ping(res http.ResponseWriter, req *http.Request) {
