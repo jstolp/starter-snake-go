@@ -11,15 +11,16 @@ import (
 	"strconv"
 )
 
-var rightBound int = 0
-var botBound int = 0
+var rightBound int = 0;
+var botBound int = 0;
 
-var turn int = 0
-var move string = "down"
-var nextMove string = ""
-var prevMove string = ""
-var headPos Coord
-var tailPos Coord
+var edgeSnakeLimit int = 0;
+var turn int = 0;
+var move string = "down";
+var nextMove string = "";
+var prevMove string = "";
+var headPos Coord;
+var tailPos Coord;
 var health int = 100;
 var numOfStartingSnakes int = 1;
 var numSnakesLeft int = 1;
@@ -41,9 +42,10 @@ func Start(res http.ResponseWriter, req *http.Request) {
   numOfStartingSnakes = len(decoded.Board.Snakes)
 	rightBound = decoded.Board.Width
 	botBound = decoded.Board.Height
+	edgeSnakeLimit = ((botBound - 1) * (rightBound - 1))
 
 	log.Print("BOARD Size: " + strconv.Itoa(botBound) + " by " + strconv.Itoa(rightBound))
-	log.Println("")
+	log.Println("MAX LENGTH TO RUN CIRCLES: " + strconv.Itoa(edgeSnakeLimit))
 	log.Print("Enemy Snakes: " + strconv.Itoa(numOfStartingSnakes - 1) + "\n\n")
 
 	if(numOfStartingSnakes == 1) {
@@ -60,6 +62,9 @@ func Start(res http.ResponseWriter, req *http.Request) {
 		TailType: "curled",
 	})
 }
+
+// Check if MoveIs Out of Bounds...
+// What a horror function.... v0.2.0 consider refactor
 func isMoveOOB(headPos Coord, direction string) bool {
 	switch direction {
 		case "down":
@@ -82,6 +87,7 @@ func isMoveOOB(headPos Coord, direction string) bool {
 	return true
 }
 
+// closestFoodPoint
 func minDistFood(headPos Coord, food []Coord) Coord {
 	min := food[0]
 	for _, f := range food {
@@ -115,13 +121,23 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Printf("Bad move request: %v", err)
 	}
+	me := decoded.You
 	foodPointList = decoded.Board.Food
-	health = decoded.You.Health
-	myLength := len(decoded.You.Body)
-	//foodPointList := decoded.Board.Food
+	health = me.Health
+	myLength := len(me.Body)
 	numSnakesLeft = len(decoded.Board.Snakes)
 	enemySnakes = numSnakesLeft - 1
 	turn = decoded.Turn
+
+	if (health == 1) {
+		log.Print("Dag Mooie Wereld... Hongersnood is geen grapje... \n\n")
+	}
+
+	// if im bigger... i can't do the edge snake strategy...
+  if (myLength >= edgeSnakeLimit) {
+			log.Println("My current length is over the EDGE LIMIT")
+	}
+
 	if (enemySnakes < 1) {
 		log.Print("SOLO " + strconv.Itoa(turn) + "MY LENGTH: " + strconv.Itoa(myLength) +" h: "+ strconv.Itoa(health) + "\n")
 	} else {
@@ -131,7 +147,9 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	headPos := getHeadPos(decoded.You)
 	nextMoveOOB := isMoveOOB(headPos, nextMove)
 	if (nextMoveOOB) {
+		// CLOCKWISE: invDir(randomNOOBmove(headPos, move))
 		nextMove = randomNOOBmove(headPos, move)
+		// COUNTER-CLOCKWISE: randomNOOBmove(headPos, move)
 	}
 
 /*
@@ -146,15 +164,17 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		} else {
 				nextMove = randomNOOBmove(headPos, move)
 		}
-		if (isNextMoveFatal(10, headPos, prevMove, nextMove)) {
+		if (isNextMoveFatal(headPos, prevMove, nextMove)) {
 			// last ditch effort to correct...
 			nextMove = invDir(nextMove)
 		}
 	} // end HEALTH LOW
 */
 
+  test := isNextMoveFatal(me, prevMove, nextMove)
 	move = nextMove // finalise the move
-	fmt.Print(strconv.Itoa(turn) + "Move: " + nextMove)
+	fmt.Print(strconv.Itoa(turn) + "Move: " + nextMove + "\n Is fatal: ")
+	fmt.Print(test)
 	fmt.Println()
 	respond(res, MoveResponse{
 		Move: nextMove,
@@ -163,9 +183,8 @@ func Move(res http.ResponseWriter, req *http.Request) {
 }
 
 
-func isNextMoveFatal(health int, headPos Coord, currentDir string, targetDir string) bool {
-    // doing a 180 is never safe, so check for that...
-
+func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
+		// doing a 180 is never safe, so check for that...
 		flipDir := invDir(currentDir)
 		if(flipDir == targetDir) {
 			log.Print("The move is " + targetDir + "but in going " + currentDir + "That would be fatal...\n")
@@ -177,11 +196,13 @@ func isNextMoveFatal(health int, headPos Coord, currentDir string, targetDir str
 			return true
 		}
 
-		if (health == 1) {
-			log.Print("Dag Mooie Wereld... Hongersnood is geen grapje... \n\n")
+		// if dist to my own tail is 1, and i'm going in the same direction...
+		// i'll die...
+		if (dist(headPos, tailPos) == 1 && targetDir == goToDir(headPos, tailPos)) {
+			log.Print("CRASHING INTO MY OWN TAIL IN ... 3 . 2.. .1.. no... next MOVE ahhaah \n\n")
+			log.Print()
 			return true
 		}
-
 		log.Print("The move " + targetDir + " is safe...\n")
 		return false
 }
