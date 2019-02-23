@@ -117,11 +117,16 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	}
 	foodPointList = decoded.Board.Food
 	health = decoded.You.Health
+	myLength := len(decoded.You.Body)
 	//foodPointList := decoded.Board.Food
 	numSnakesLeft = len(decoded.Board.Snakes)
 	enemySnakes = numSnakesLeft - 1
 	turn = decoded.Turn
-	log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
+	if (enemySnakes < 1) {
+		log.Print("SOLO " + strconv.Itoa(turn) + "MY LENGTH: " + strconv.Itoa(myLength) +" h: "+ strconv.Itoa(health) + "\n")
+	} else {
+		log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
+	}
 
 	headPos := getHeadPos(decoded.You)
 	nextMoveOOB := isMoveOOB(headPos, nextMove)
@@ -129,7 +134,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		nextMove = randomNOOBmove(headPos, move)
 	}
 
-
+/*
 	if (health < 30) {
 		closestFoodPoint := minDistFood(headPos,foodPointList)
 		dd(closestFoodPoint)
@@ -141,21 +146,20 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		} else {
 				nextMove = randomNOOBmove(headPos, move)
 		}
-	}
+		if (isNextMoveFatal(10, headPos, prevMove, nextMove)) {
+			// last ditch effort to correct...
+			nextMove = invDir(nextMove)
+		}
+	} // end HEALTH LOW
+*/
 
-	if (isNextMoveFatal(10, headPos, prevMove, nextMove)) {
-		// last ditch effort to correct...
-		move = invDir(nextMove)
-	} else {
-		move = nextMove // finalise the move
-	}
-
-	fmt.Print(strconv.Itoa(turn) + "Move: " + move)
+	move = nextMove // finalise the move
+	fmt.Print(strconv.Itoa(turn) + "Move: " + nextMove)
 	fmt.Println()
 	respond(res, MoveResponse{
-		Move: move,
+		Move: nextMove,
 	})
-	prevMove = move // Re-allocate move command to prev/last move\
+	prevMove = nextMove // Re-allocate move command to prev/last move\
 }
 
 
