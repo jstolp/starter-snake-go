@@ -11,6 +11,8 @@ import (
 	"strconv"
 )
 
+var leftBound int = 1;
+var topBound int = 1;
 var rightBound int = 0;
 var botBound int = 0;
 
@@ -26,9 +28,24 @@ var numOfStartingSnakes int = 1;
 var numSnakesLeft int = 1;
 var enemySnakes int = 0;
 var foodPointList []Coord;
+var endCicle bool = false;
 
 /* heads: "beluga" "bendr" "dead" "evil" "fang" "pixel" "regular" "safe" "sand-worm" "shades" "silly" "smile" "tongue"
 tails: "block-bum" "bolt" "curled" "fat-rattle" "freckled" "hook" "pixel" "regular" "round-bum" "sharp" "skinny" "small-rattle" */
+
+func shrinkArena() {
+	leftBound = leftBound + 1
+	topBound = topBound + 1
+	rightBound = rightBound - 1
+	botBound = botBound - 1
+	// edgeSnakeLimit = ((botBound - 1) * (rightBound - 1)) - FALSE ASSUMPTION. it doesn't work if you shrink, because you are bigger
+
+	log.Print("BOARD Size: TOP LEFT  NW Corner x:" + strconv.Itoa(topBound) + " , " + strconv.Itoa(leftBound))
+	log.Print("BOARD Size: BOT RIGHT SE Corner x:" + strconv.Itoa(botBound) + "," + strconv.Itoa(rightBound))
+	log.Println("Snake Edge Limit: " + strconv.Itoa(edgeSnakeLimit))
+
+	log.Print("Shrunk the Area by 1x1... new SIZES \n")
+}
 
 func Start(res http.ResponseWriter, req *http.Request) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
@@ -38,18 +55,22 @@ func Start(res http.ResponseWriter, req *http.Request) {
 		log.Printf("Bad start request: %v", err)
 	}
 
+  headPos = decoded.You.Body[0]
   //foodPointList := decoded.Board.Food
   numOfStartingSnakes = len(decoded.Board.Snakes)
-	rightBound = decoded.Board.Width
-	botBound = decoded.Board.Height
+  topBound, leftBound = 1, 1; // Set NW bound, X, Y
+	botBound, rightBound = decoded.Board.Height, decoded.Board.Width // SE corner X, Y
+
 	edgeSnakeLimit = ((botBound - 1) * (rightBound - 1))
 
-	log.Print("BOARD Size: " + strconv.Itoa(botBound) + " by " + strconv.Itoa(rightBound))
-	log.Println("MAX LENGTH TO RUN CIRCLES: " + strconv.Itoa(edgeSnakeLimit))
+	log.Print("BOARD Size: TOP LEFT  NW Corner x:" + strconv.Itoa(topBound) + " , " + strconv.Itoa(leftBound))
+	log.Print("BOARD Size: BOT RIGHT SE Corner x:" + strconv.Itoa(botBound) + "," + strconv.Itoa(rightBound))
+	log.Println("Snake Edge Limit: " + strconv.Itoa(edgeSnakeLimit))
 	log.Print("Enemy Snakes: " + strconv.Itoa(numOfStartingSnakes - 1) + "\n\n")
 
+	log.Print("Start Pos: " + strconv.Itoa(headPos.X) + "," + strconv.Itoa(headPos.Y))
 	if(numOfStartingSnakes == 1) {
-		log.Print("It's Gonna be a SOLO GAME \n")
+		log.Print("\n\n It's Gonna be a SOLO GAME \n")
 	}
 	/*
 	 e19c41 - orange test 2
@@ -72,11 +93,11 @@ func isMoveOOB(headPos Coord, direction string) bool {
 					return false
 			}
 		case "up":
-			if (headPos.Y > 0) {
+			if (headPos.Y + 1 > topBound) {
 				return false
 			}
 		case "left":
-			if(headPos.X + 1 > 1) {
+			if(headPos.X + 1 > leftBound) {
 				return false
 			}
 		case "right":
@@ -121,6 +142,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		log.Printf("Bad move request: %v", err)
 	}
+
 	me := decoded.You
 	foodPointList = decoded.Board.Food
 	health = me.Health
@@ -129,13 +151,17 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	enemySnakes = numSnakesLeft - 1
 	turn = decoded.Turn
 
-	if (health == 1) {
-		log.Print("Dag Mooie Wereld... Hongersnood is geen grapje... \n\n")
+	if (me.Body[0].X == 0 && me.Body[0].Y == 0) {
+		log.Print("IM TOP LEFT... \n\n")
+		log.Print("IM TOP LEFT... \n\n")
+		log.Print("IM TOP LEFT... \n\n")
+		log.Print("IM TOP LEFT... \n\n")
+	} else {
+		dd(me.Body[0])
 	}
 
-	// if im bigger... i can't do the edge snake strategy...
-  if (myLength == edgeSnakeLimit) {
-			log.Println("CirleJerk... Infinity SNAKEEE... let's switch the strat.")
+	if (health == 1) {
+		log.Print("Dag Mooie Wereld... Hongersnood is geen grapje... \n\n")
 	}
 
 	if (myLength > edgeSnakeLimit) {
@@ -149,13 +175,24 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	}
 
 	headPos := getHeadPos(decoded.You)
-	nextMoveOOB := isMoveOOB(headPos, nextMove)
-	if (nextMoveOOB) {
+	nextMoveIsOOB := isMoveOOB(headPos, nextMove)
+	if (nextMoveIsOOB) {
 		// CLOCKWISE: invDir(randomNOOBmove(headPos, move))
 		nextMove = randomNOOBmove(headPos, move)
 		// COUNTER-CLOCKWISE: randomNOOBmove(headPos, move)
 	}
 
+	if (endCicle) {
+		endCicle = false;
+		log.Print("END CIRCLE COMMAND. SHRuhk the arena... i should VEERE... \n")
+	}
+	// if im bigger... i can't do the edge snake strategy...
+  if (endCicle == false && myLength == edgeSnakeLimit) {
+			log.Println("CirleJerk... Infinity SNAKEEE... let's switch the strat.")
+			shrinkArena()
+			nextMove = randomNOOBmove(headPos, move)
+			//nextMove = randomNOOBmove(headPos, move)
+	}
 /*
 	if (health < 30) {
 		closestFoodPoint := minDistFood(headPos,foodPointList)
