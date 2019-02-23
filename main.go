@@ -1,3 +1,5 @@
+// PofAdder-GO - a batttlesnake.io AI
+// defines routes, runs on port 9000
 package main
 
 import (
