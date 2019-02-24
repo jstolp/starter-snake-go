@@ -24,6 +24,8 @@ in order to do that... i need a priority queue in GO
 
 https://golang.org/src/container/heap/example_pq_test.go
 
+https://www.redblobgames.com/pathfinding/a-star/introduction.html
+
 
 ## Changelog
 
