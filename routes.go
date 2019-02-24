@@ -91,19 +91,17 @@ func isMoveOOB(headPos Coord, direction string) bool {
 		case "down":
 			if (headPos.Y + 1 < botBound) {
 					return false
-			} else {
-				fmt.Print("POSSIBLE ERROR WITH EQUASION: headpos.Y+1 %d < %d botBound (CONSIDERED OOB for move down)", headPos.Y + 1, botBound)
 			}
 		case "up":
 			if (headPos.Y + 1 > topBound) {
 				return false
 			}
 		case "left":
-			if(headPos.X + 1 > leftBound) {
+			if (headPos.X + 1 > leftBound) {
 				return false
 			}
 		case "right":
-			if(headPos.X + 1 < rightBound) {
+			if (headPos.X + 1 < rightBound) {
 				return false
 			}
 	}
@@ -213,26 +211,24 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if (health < 60) {
-		//dd()
+		log.Print("im hungry... \n\n")
+
+		if(len(foodPointList) > 0) {
 		closestFoodPoint := minDistFood(headPos,foodPointList)
-		foodDir := goToDir(headPos,closestFoodPoint)
+			foodDir := goToDir(headPos,closestFoodPoint)
+			dd(foodDir)
 
-		fmt.Print("im gooing to " + foodDir + "seems to be a good idea...")
-		if(!isNextMoveFatal(me, prevMove, foodDir)) {
-				nextMove = foodDir
-		} else {
-			fmt.Print("STOP STOP STOP " + foodDir + " is fatal!!!!")
-				nextMove = randomNOOBmove(headPos, move)
-				fmt.Print("OK... ive selected " +  nextMove + "as the next move")
-				if (isNextMoveFatal(me, prevMove, nextMove)) {
-					// last ditch effort to correct...
-					fmt.Print("fk me that's fatal ALSO!")
-					nextMove = invDir(nextMove)
-				}
+			fmt.Print("im gooing to " + foodDir + "seems to be a good idea...")
+			if(!isNextMoveFatal(me, prevMove, foodDir)) {
+					nextMove = foodDir
+			} else {
+				fmt.Print("STOP STOP STOP " + foodDir + " is fatal!!!!")
+				//	nextMove = randomNOOBmove(headPos, prevMove)
+					fmt.Print("OK... ive selected " +  nextMove + "as the next move")
+			}
+	} else {
+			log.Print("IM HUNGRY BUT THERE IS NO FOOD \n\n")
 		}
-
-
-		log.Print("Dag Mooie Wereld... Hongersnood is geen grapje... \n\n")
 	}
 
 
