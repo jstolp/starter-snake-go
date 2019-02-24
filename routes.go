@@ -4,7 +4,7 @@ import (
 	"log"
 	"encoding/json"
 	"net/http"
-	. "./api"
+	. "github.com/jstolp/pofadder-go/api"
 	"github.com/tkanos/gonfig"
 	"fmt"
 	"math"
