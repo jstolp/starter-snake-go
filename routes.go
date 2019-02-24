@@ -193,6 +193,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
   if (endCicle == false && myLength == edgeSnakeLimit) {
 			log.Println("CirleJerk... Infinity SNAKEEE... let's switch the strat.")
 			shrinkArena()
+			edgeSnakeLimit = (((botBound - 1) * 2) + ((rightBound - 1) * 2))
 			nextMove = randomNOOBmove(headPos, move)
 			//nextMove = randomNOOBmove(headPos, move)
 	}
@@ -337,6 +338,10 @@ func Index(res http.ResponseWriter, req *http.Request) {
 func Ping(res http.ResponseWriter, req *http.Request) {
 	log.Print("PONG to a server ping... \n")
 	return
+}
+
+func favicon(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "favicon.ico")
 }
 
 func End(res http.ResponseWriter, req *http.Request) {
