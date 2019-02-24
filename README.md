@@ -2,6 +2,13 @@
 
 De Gewone (Domme) PofAdder
 
+## roadmap
+
+https://github.com/maximelamure/algorithms/blob/master/README.md
+
+Hamilton Path.
+
+Zap (uber.org) logging
 
 ## Changelog
 
