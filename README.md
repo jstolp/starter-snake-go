@@ -10,6 +10,8 @@ Hamilton Path.
 
 Zap (uber.org) logging
 
+answer this with source code: https://stackoverflow.com/questions/32999136/perfect-snake-ai
+
 ## Changelog
 
 ### v0.2.x
