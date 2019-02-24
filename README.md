@@ -16,6 +16,9 @@ https://en.m.wikipedia.org/wiki/A*_search_algorithm
 
 A* search is what i need....
 
+https://github.com/beefsack/go-astar
+
+
 in order to do that... i need a priority queue in GO
 
 
