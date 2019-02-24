@@ -162,7 +162,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	enemySnakes = numSnakesLeft - 1
 	turn = decoded.Turn
 	if (health > 99) {
-		fmt.Print("\n\n I JUST ATE FOOOOOOD \n\n")
+		fmt.Print("I JUST ATE FOOOOOOD \n\n")
 		// i just ate. reset foodPoint
 			noTargetFood = true
 	}
@@ -212,7 +212,7 @@ log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: 
 
 	if(len(foodPointList) > 0) {
 
-		if (health < 60) {
+		if (health < 40) {
 
 			if (noTargetFood) {
 				closestFoodPoint := minDistFood(headPos,foodPointList)
