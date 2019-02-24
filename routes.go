@@ -119,8 +119,12 @@ func minDistFood(headPos Coord, food []Coord) Coord {
 	return min
 }
 
+// TIME TO DEPRICATE THIS FUNCTION. I NEED A MOVE THAT IS... 1 NOT OOB.
+// 1. Not into a wall!
+// 2. not into Myself.
+// 3. not into my Body.
+// 4 (Battle) - not into another snake.
 func randomNOOBmove(headPos Coord, currentDir string) string {
-
   //randomInt = rand.Intn(100)
 	switch currentDir {
 		case "down":
