@@ -12,6 +12,11 @@ Zap (uber.org) logging
 
 answer this with source code: https://stackoverflow.com/questions/32999136/perfect-snake-ai
 
+https://en.m.wikipedia.org/wiki/A*_search_algorithm
+
+A* search is what i need....
+
+
 ## Changelog
 
 ### v0.2.x
