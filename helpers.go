@@ -1,4 +1,5 @@
 package main
+// Package with Helpers from Battlesnake.io
 
 import (
 	"encoding/json"

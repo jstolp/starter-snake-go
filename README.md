@@ -2,6 +2,25 @@
 
 De Gewone (Domme) PofAdder
 
+## roadmap
+
+https://github.com/maximelamure/algorithms/blob/master/README.md
+
+Hamilton Path.
+
+Zap (uber.org) logging
+
+answer this with source code: https://stackoverflow.com/questions/32999136/perfect-snake-ai
+
+https://en.m.wikipedia.org/wiki/A*_search_algorithm
+
+A* search is what i need....
+
+in order to do that... i need a priority queue in GO
+
+
+https://golang.org/src/container/heap/example_pq_test.go
+
 
 ## Changelog
 

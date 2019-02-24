@@ -14,6 +14,7 @@ func main() {
 	http.HandleFunc("/move", Move)
 	http.HandleFunc("/end", End)
 	http.HandleFunc("/ping", Ping)
+	http.HandleFunc("/favicon.ico", favicon)
 
 	port := os.Getenv("PORT")
 	if port == "" {

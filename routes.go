@@ -61,7 +61,7 @@ func Start(res http.ResponseWriter, req *http.Request) {
   topBound, leftBound = 1, 1; // Set NW bound, X, Y
 	botBound, rightBound = decoded.Board.Height, decoded.Board.Width // SE corner X, Y
 
-	edgeSnakeLimit = ((botBound - 1) * (rightBound - 1))
+	edgeSnakeLimit = (((botBound - 1) * 2) + ((rightBound - 1) * 2))
 
 	log.Print("BOARD Size: TOP LEFT  NW Corner x:" + strconv.Itoa(topBound) + " , " + strconv.Itoa(leftBound))
 	log.Print("BOARD Size: BOT RIGHT SE Corner x:" + strconv.Itoa(botBound) + "," + strconv.Itoa(rightBound))
@@ -97,11 +97,11 @@ func isMoveOOB(headPos Coord, direction string) bool {
 				return false
 			}
 		case "left":
-			if(headPos.X + 1 > leftBound) {
+			if (headPos.X + 1 > leftBound) {
 				return false
 			}
 		case "right":
-			if(headPos.X + 1 < rightBound) {
+			if (headPos.X + 1 < rightBound) {
 				return false
 			}
 	}
@@ -119,8 +119,12 @@ func minDistFood(headPos Coord, food []Coord) Coord {
 	return min
 }
 
+// TIME TO DEPRICATE THIS FUNCTION. I NEED A MOVE THAT IS... 1 NOT OOB.
+// 1. Not into a wall!
+// 2. not into Myself.
+// 3. not into my Body.
+// 4 (Battle) - not into another snake.
 func randomNOOBmove(headPos Coord, currentDir string) string {
-
   //randomInt = rand.Intn(100)
 	switch currentDir {
 		case "down":
@@ -144,37 +148,52 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	}
 
 	me := decoded.You
+	headPos := getHeadPos(me)
 	foodPointList = decoded.Board.Food
+//	tailPos := getTailPos(me)
 	health = me.Health
 	myLength := len(me.Body)
 	numSnakesLeft = len(decoded.Board.Snakes)
 	enemySnakes = numSnakesLeft - 1
 	turn = decoded.Turn
 
-	if (me.Body[0].X == 0 && me.Body[0].Y == 0) {
+  // IF at 0,0 I'm in the TOP-left corner
+	if (headPos.X == 0 && headPos.Y == 0) {
+		log.Printf("I'm in the TOP-LEFT NW CORNER AT TURN %d", turn)
+	}
+
+	if (headPos.X == rightBound - 1 && headPos.Y == botBound - 1) {
+		log.Printf("I'm in the BOT-RIGHT SE CORNER AT TURN %d", turn)
+	}
+
+/*
+	if (me.Body[0].X == 0 && me.Body[0].Y == 0 && myLength == edgeSnakeLimit) {
 		log.Print("IM TOP LEFT... \n\n")
-		log.Print("IM TOP LEFT... \n\n")
-		log.Print("IM TOP LEFT... \n\n")
-		log.Print("IM TOP LEFT... \n\n")
+		shrinkArena()
 	} else {
 		dd(me.Body[0])
 	}
+*/
 
-	if (health == 1) {
-		log.Print("Dag Mooie Wereld... Hongersnood is geen grapje... \n\n")
+	if (myLength == edgeSnakeLimit) {
+			log.Println("circle JErk")
 	}
+
+
 
 	if (myLength > edgeSnakeLimit) {
 			log.Println("DEATH DEATH DEATH TAILCRASH")
 	}
+
+
 	if (enemySnakes < 1) {
-		log.Print("TURN " + strconv.Itoa(turn))
-		//log.Print("SOLO " + strconv.Itoa(turn) + "MY LENGTH: " + strconv.Itoa(myLength) +" h: "+ strconv.Itoa(health) + "\n")
-	} else {
-		log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
+		// SOLO MODE!
+		} else {
+			// BATTLE  MODE
+		//log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
 	}
 
-	headPos := getHeadPos(decoded.You)
+
 	nextMoveIsOOB := isMoveOOB(headPos, nextMove)
 	if (nextMoveIsOOB) {
 		// CLOCKWISE: invDir(randomNOOBmove(headPos, move))
@@ -190,27 +209,32 @@ func Move(res http.ResponseWriter, req *http.Request) {
   if (endCicle == false && myLength == edgeSnakeLimit) {
 			log.Println("CirleJerk... Infinity SNAKEEE... let's switch the strat.")
 			shrinkArena()
+			edgeSnakeLimit = (((botBound - 1) * 2) + ((rightBound - 1) * 2))
 			nextMove = randomNOOBmove(headPos, move)
 			//nextMove = randomNOOBmove(headPos, move)
 	}
-/*
-	if (health < 30) {
-		closestFoodPoint := minDistFood(headPos,foodPointList)
-		dd(closestFoodPoint)
-		log.Print("Im going to die of starvation in " + strconv.Itoa(health) + " turns \n\n")
-		foodDir := goToDir(headPos,closestFoodPoint)
 
-		if(!isMoveOOB(headPos, foodDir)) {
-				nextMove = foodDir
-		} else {
-				nextMove = randomNOOBmove(headPos, move)
+	if (health < 60) {
+		log.Print("im hungry... \n\n")
+
+		if(len(foodPointList) > 0) {
+		closestFoodPoint := minDistFood(headPos,foodPointList)
+			foodDir := goToDir(headPos,closestFoodPoint)
+			dd(foodDir)
+
+			fmt.Print("im gooing to " + foodDir + "seems to be a good idea...")
+			if(!isNextMoveFatal(me, prevMove, foodDir)) {
+					nextMove = foodDir
+			} else {
+				fmt.Print("STOP STOP STOP " + foodDir + " is fatal!!!!")
+				//	nextMove = randomNOOBmove(headPos, prevMove)
+					fmt.Print("OK... ive selected " +  nextMove + "as the next move")
+			}
+	} else {
+			log.Print("IM HUNGRY BUT THERE IS NO FOOD \n\n")
 		}
-		if (isNextMoveFatal(headPos, prevMove, nextMove)) {
-			// last ditch effort to correct...
-			nextMove = invDir(nextMove)
-		}
-	} // end HEALTH LOW
-*/
+	}
+
 
   test := isNextMoveFatal(me, prevMove, nextMove)
 	move = nextMove // finalise the move
@@ -244,12 +268,15 @@ func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
 			log.Print()
 			return true
 		}
-		log.Print("The move " + targetDir + " is safe...\n")
+
+		//log.Print("The move " + targetDir + " is safe...\n")
 		return false
 }
 
 
 // see if i can attach these methods to the struct Snake or something..
+// func (target Snake) Head() Coord { return target.Body[0] }
+
 func getHeadPos(target Snake) Coord {
 	body := target.Body
   return body[0]
@@ -293,6 +320,14 @@ sl = sl[:len(sl)-1] RM last SLICE
 https://github.com/golang/go/wiki/SliceTricks
 */
 
+func GetBodies(snakes SnakesList) []Coord {
+  list := make([]Coord, 0)
+  for _, s := range snakes {
+    list = append(list, s.Body...)
+  }
+  return list
+}
+
 /* Inverses direction */
 func invDir(currentDir string) string {
 		dir := ""
@@ -328,12 +363,16 @@ func Index(res http.ResponseWriter, req *http.Request) {
 		log.Printf("Bad configuration in config.json: %v", errConf)
 	}
 	res.WriteHeader(http.StatusOK)
-	res.Write([]byte("Jay's battleSnake mk 2 self aware: " + configuration.Home_Route))
+	res.Write([]byte("Jay's battleSnake mk III self aware: " + configuration.Home_Route))
 }
 
 func Ping(res http.ResponseWriter, req *http.Request) {
 	log.Print("PONG to a server ping... \n")
 	return
+}
+
+func favicon(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "favicon.ico")
 }
 
 func End(res http.ResponseWriter, req *http.Request) {
