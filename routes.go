@@ -4,7 +4,7 @@ import (
 	"log"
 	"encoding/json"
 	"net/http"
-	. "github.com/jstolp/pofadder-go/api"
+	. "./api"
 	"github.com/tkanos/gonfig"
 	"fmt"
 	"math"
@@ -144,12 +144,23 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	}
 
 	me := decoded.You
+	headPos := getHeadPos(me)
 	foodPointList = decoded.Board.Food
+//	tailPos := getTailPos(me)
 	health = me.Health
 	myLength := len(me.Body)
 	numSnakesLeft = len(decoded.Board.Snakes)
 	enemySnakes = numSnakesLeft - 1
 	turn = decoded.Turn
+
+  // IF at 0,0 I'm in the TOP-left corner
+	if (headPos.X == 0 && headPos.Y == 0) {
+		log.Printf("I'm in the TOP-LEFT NW CORNER AT TURN %d", turn)
+	}
+
+	if (headPos.X == rightBound - 1 && headPos.Y == botBound - 1) {
+		log.Printf("I'm in the BOT-RIGHT SE CORNER AT TURN %d", turn)
+	}
 
 /*
 	if (me.Body[0].X == 0 && me.Body[0].Y == 0 && myLength == edgeSnakeLimit) {
@@ -159,25 +170,26 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		dd(me.Body[0])
 	}
 */
-	if (health == 1) {
-		log.Print("Dag Mooie Wereld... Hongersnood is geen grapje... \n\n")
-	}
 
 	if (myLength == edgeSnakeLimit) {
 			log.Println("circle JErk")
 	}
 
+
+
 	if (myLength > edgeSnakeLimit) {
 			log.Println("DEATH DEATH DEATH TAILCRASH")
 	}
+
+
 	if (enemySnakes < 1) {
-		//log.Print("TURN " + strconv.Itoa(turn))
-		log.Print("SOLO " + strconv.Itoa(turn) + "MY LENGTH: " + strconv.Itoa(myLength) +" h: "+ strconv.Itoa(health) + "\n")
-	} else {
-		log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
+		// SOLO MODE!
+		} else {
+			// BATTLE  MODE
+		//log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
 	}
 
-	headPos := getHeadPos(decoded.You)
+
 	nextMoveIsOOB := isMoveOOB(headPos, nextMove)
 	if (nextMoveIsOOB) {
 		// CLOCKWISE: invDir(randomNOOBmove(headPos, move))
@@ -197,11 +209,10 @@ func Move(res http.ResponseWriter, req *http.Request) {
 			nextMove = randomNOOBmove(headPos, move)
 			//nextMove = randomNOOBmove(headPos, move)
 	}
-/*
+
 	if (health < 30) {
+		//dd()
 		closestFoodPoint := minDistFood(headPos,foodPointList)
-		dd(closestFoodPoint)
-		log.Print("Im going to die of starvation in " + strconv.Itoa(health) + " turns \n\n")
 		foodDir := goToDir(headPos,closestFoodPoint)
 
 		if(!isMoveOOB(headPos, foodDir)) {
@@ -209,12 +220,12 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		} else {
 				nextMove = randomNOOBmove(headPos, move)
 		}
-		if (isNextMoveFatal(headPos, prevMove, nextMove)) {
+		if (isNextMoveFatal(me, prevMove, nextMove)) {
 			// last ditch effort to correct...
 			nextMove = invDir(nextMove)
 		}
-	} // end HEALTH LOW
-*/
+		log.Print("Dag Mooie Wereld... Hongersnood is geen grapje... \n\n")
+	}
 
   test := isNextMoveFatal(me, prevMove, nextMove)
 	move = nextMove // finalise the move
@@ -254,6 +265,8 @@ func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
 
 
 // see if i can attach these methods to the struct Snake or something..
+// func (target Snake) Head() Coord { return target.Body[0] }
+
 func getHeadPos(target Snake) Coord {
 	body := target.Body
   return body[0]
@@ -296,6 +309,14 @@ func goToDir(curr Coord, next Coord) string {
 sl = sl[:len(sl)-1] RM last SLICE
 https://github.com/golang/go/wiki/SliceTricks
 */
+
+func GetBodies(snakes SnakesList) []Coord {
+  list := make([]Coord, 0)
+  for _, s := range snakes {
+    list = append(list, s.Body...)
+  }
+  return list
+}
 
 /* Inverses direction */
 func invDir(currentDir string) string {
