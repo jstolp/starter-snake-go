@@ -4,7 +4,8 @@ import (
 	"log"
 	"encoding/json"
 	"net/http"
-	. "github.com/jstolp/pofadder-go/api"
+//	. "github.com/jstolp/pofadder-go/api" // Heroku wants this
+. "./api" // local wants this
 	"github.com/tkanos/gonfig"
 	"fmt"
 	"math"
@@ -29,6 +30,9 @@ var numSnakesLeft int = 1;
 var enemySnakes int = 0;
 var foodPointList []Coord;
 var endCicle bool = false;
+
+var selectedFood Coord;
+var noTargetFood bool = true; // i have no target food.
 
 /* heads: "beluga" "bendr" "dead" "evil" "fang" "pixel" "regular" "safe" "sand-worm" "shades" "silly" "smile" "tongue"
 tails: "block-bum" "bolt" "curled" "fat-rattle" "freckled" "hook" "pixel" "regular" "round-bum" "sharp" "skinny" "small-rattle" */
@@ -151,19 +155,24 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	headPos := getHeadPos(me)
 	foodPointList = decoded.Board.Food
 //	tailPos := getTailPos(me)
+
 	health = me.Health
 	myLength := len(me.Body)
 	numSnakesLeft = len(decoded.Board.Snakes)
 	enemySnakes = numSnakesLeft - 1
 	turn = decoded.Turn
-
+	if (health > 99) {
+		fmt.Print("\n\n I JUST ATE FOOOOOOD \n\n")
+		// i just ate. reset foodPoint
+			noTargetFood = true
+	}
   // IF at 0,0 I'm in the TOP-left corner
 	if (headPos.X == 0 && headPos.Y == 0) {
-		log.Printf("I'm in the TOP-LEFT NW CORNER AT TURN %d", turn)
+		//log.Printf("I'm in the TOP-LEFT NW CORNER AT TURN %d", turn)
 	}
 
 	if (headPos.X == rightBound - 1 && headPos.Y == botBound - 1) {
-		log.Printf("I'm in the BOT-RIGHT SE CORNER AT TURN %d", turn)
+		//log.Printf("I'm in the BOT-RIGHT SE CORNER AT TURN %d", turn)
 	}
 
 /*
@@ -190,9 +199,9 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		// SOLO MODE!
 		} else {
 			// BATTLE  MODE
-		//log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
+		//
 	}
-
+log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
 
 	nextMoveIsOOB := isMoveOOB(headPos, nextMove)
 	if (nextMoveIsOOB) {
@@ -201,50 +210,43 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		// COUNTER-CLOCKWISE: randomNOOBmove(headPos, move)
 	}
 
-	if (endCicle) {
-		endCicle = false;
-		log.Print("END CIRCLE COMMAND. SHRuhk the arena... i should VEERE... \n")
-	}
-	// if im bigger... i can't do the edge snake strategy...
-  if (endCicle == false && myLength == edgeSnakeLimit) {
-			log.Println("CirleJerk... Infinity SNAKEEE... let's switch the strat.")
-			shrinkArena()
-			edgeSnakeLimit = (((botBound - 1) * 2) + ((rightBound - 1) * 2))
-			nextMove = randomNOOBmove(headPos, move)
-			//nextMove = randomNOOBmove(headPos, move)
-	}
+	if(len(foodPointList) > 0) {
 
-	if (health < 60) {
-		log.Print("im hungry... \n\n")
+		if (health < 60) {
 
-		if(len(foodPointList) > 0) {
-		closestFoodPoint := minDistFood(headPos,foodPointList)
-			foodDir := goToDir(headPos,closestFoodPoint)
-			dd(foodDir)
-
-			fmt.Print("im gooing to " + foodDir + "seems to be a good idea...")
-			if(!isNextMoveFatal(me, prevMove, foodDir)) {
-					nextMove = foodDir
-			} else {
-				fmt.Print("STOP STOP STOP " + foodDir + " is fatal!!!!")
-				//	nextMove = randomNOOBmove(headPos, prevMove)
-					fmt.Print("OK... ive selected " +  nextMove + "as the next move")
+			if (noTargetFood) {
+				closestFoodPoint := minDistFood(headPos,foodPointList)
+				selectedFood = closestFoodPoint
+				fmt.Print("I've selected food...")
+				dd(selectedFood)
 			}
-	} else {
-			log.Print("IM HUNGRY BUT THERE IS NO FOOD \n\n")
-		}
+			//log.Print("im hungry and there is food... \n\n")
+				foodDir := goToDir(headPos, selectedFood)
+
+				//fmt.Print("im gooing to " + foodDir + "seems to be a good idea...")
+				if(!isNextMoveFatal(me, prevMove, foodDir)) {
+						nextMove = foodDir
+				} else {
+					fmt.Print("STOP STOP STOP " + foodDir + " is fatal!!!! \n")
+					//	nextMove = randomNOOBmove(headPos, prevMove)
+					fmt.Print("OK... ive selected " +  nextMove + " as the next move \n")
+				}
+			} // end if health < 60
+		}  else {
+		log.Print("THERE IS NO FOOD \n\n")
+		noTargetFood = true;
 	}
 
 
-  test := isNextMoveFatal(me, prevMove, nextMove)
+  //test := isNextMoveFatal(me, prevMove, nextMove)
 	move = nextMove // finalise the move
-	fmt.Print(strconv.Itoa(turn) + "Move: " + nextMove + "\n Is fatal: ")
-	fmt.Print(test)
-	fmt.Println()
+	fmt.Print(strconv.Itoa(turn) + ": Move " + move)
+	//fmt.Print(test)
+	//fmt.Println()
 	respond(res, MoveResponse{
-		Move: nextMove,
+		Move: move,
 	})
-	prevMove = nextMove // Re-allocate move command to prev/last move\
+	prevMove = move // Re-allocate move command to prev/last move\
 }
 
 
@@ -252,12 +254,12 @@ func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
 		// doing a 180 is never safe, so check for that...
 		flipDir := invDir(currentDir)
 		if(flipDir == targetDir) {
-			log.Print("The move is " + targetDir + "but in going " + currentDir + "That would be fatal...\n")
+			//log.Print("The move is " + targetDir + "but in going " + currentDir + "That would be fatal...\n")
 			return true
 		}
 		// check if a move is NOT_OUT_OF_BOUNDS (hit a wall) WALL SNAKE
 		if (isMoveOOB(headPos, targetDir)) {
-			log.Print("Next Move is Fatal because of a BOUNDARY " + targetDir + "\n")
+			//log.Print("Next Move is Fatal because of a BOUNDARY " + targetDir + "\n")
 			return true
 		}
 
