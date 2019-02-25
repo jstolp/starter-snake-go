@@ -16,6 +16,38 @@ type Coord struct {
   Y int `json:"y"`
 }
 
+// via Joram/COORDS.go
+func (c Coord) Adjacent() []Coord {
+	return []Coord{
+		{c.X + 0, c.Y + 1},
+		{c.X + 0, c.Y - 1},
+		{c.X + 1, c.Y + 0},
+		{c.X - 1, c.Y + 0},
+	}
+}
+
+// need probably need such scaffolding. this for BFS/ A* / Pathing via Dijkstra
+func (c Coord) SurroundingCoords() []Coord {
+	return []Coord{
+		{c.X + 0, c.Y + 1},
+		{c.X + 0, c.Y - 1},
+		{c.X + 1, c.Y + 0},
+		{c.X - 1, c.Y + 0},
+
+		{c.X + 1, c.Y + 1},
+		{c.X - 1, c.Y - 1},
+		{c.X + 1, c.Y - 1},
+		{c.X - 1, c.Y + 1},
+
+	}
+
+}
+
+// handy handy function to check NW,SE Corner for example
+func (c Coord) Equal(other Coord) bool {
+	return c.X == other.X && c.Y == other.Y
+}
+
 type Snake struct {
   ID     string  `json:"id"`
   Name   string  `json:"name"`
