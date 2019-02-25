@@ -21,7 +21,8 @@ https://github.com/beefsack/go-astar
 
 in order to do that... i need a priority queue in GO
 
-https://youtu.be/dl4gycknzYY graphs in go
+phs in go
+https://youtu.be/zaBhtODEL0w other lang BFS and DFS
 
 https://golang.org/src/container/heap/example_pq_test.go
 
