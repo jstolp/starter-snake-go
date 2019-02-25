@@ -88,23 +88,22 @@ func Move(res http.ResponseWriter, req *http.Request) {
 //  tailPos := getTailPos(me)
 
   health = me.Health
-  myLength := len(me.Body)
+  //myLength := len(me.Body)
   numSnakesLeft = len(decoded.Board.Snakes)
   enemySnakes = numSnakesLeft - 1
   turn = decoded.Turn
   if (health > 99) {
     fmt.Print("I JUST ATE FOOOOOOD \n\n")
     // i just ate. reset foodPoint
-      noTargetFood = true
   }
   // IF at 0,0 I'm in the TOP-left corner
-  if (headPos.X == 0 && headPos.Y == 0) {
+//  if (headPos.X == 0 && headPos.Y == 0) {
     //log.Printf("I'm in the TOP-LEFT NW CORNER AT TURN %d", turn)
-  }
+//  }
 
-  if (headPos.X == rightBound - 1 && headPos.Y == botBound - 1) {
+//  if (headPos.X == rightBound - 1 && headPos.Y == botBound - 1) {
     //log.Printf("I'm in the BOT-RIGHT SE CORNER AT TURN %d", turn)
-  }
+//  }
 
 /*
   if (me.Body[0].X == 0 && me.Body[0].Y == 0 && myLength == edgeSnakeLimit) {
@@ -115,61 +114,92 @@ func Move(res http.ResponseWriter, req *http.Request) {
   }
 */
 
-  if (myLength == edgeSnakeLimit) {
-      log.Println("circle JErk")
-  }
-
-
-
-  if (myLength > edgeSnakeLimit) {
-      log.Println("DEATH DEATH DEATH TAILCRASH")
-  }
-
-
   if (enemySnakes < 1) {
     // SOLO MODE!
     } else {
       // BATTLE  MODE
     //
   }
+
 log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
 
+//
   nextMoveIsOOB := isMoveOOB(headPos, nextMove)
   if (nextMoveIsOOB) {
     // CLOCKWISE: invDir(randomNOOBmove(headPos, move))
     nextMove = randomNOOBmove(headPos, move)
     // COUNTER-CLOCKWISE: randomNOOBmove(headPos, move)
-  }
 
+
+  } else {
+		// next move isn't OOB but do i kill myself?
+	//	fmt.Print("with my currentHEADPOINT: \n")
+	//	dd(headPos)
+//		fmt.Print("The following points are IN BOUND!") // and no Body-Crash to foodPOINT
+
+		//dd() // isNextMoveValid??
+	}
+
+	validMoves := validMoveCoordinates(headPos, nextMove, me.Body)
+
+	//closestFoodPoint := minDistFood(headPos,foodPointList)
+	// if there is a direct path to the food... Go for it!
   if(len(foodPointList) > 0) {
 
     if (health < 40) {
+        //closestFoodPoint := minDistFood(headPos,foodPointList)
+        //selectedFood = closestFoodPoint
+				foodDir := goToDir(headPos, selectedFood)
+//        fmt.Print("I've selected food...")
+//        dd(selectedFood)
 
-      if (noTargetFood) {
-        closestFoodPoint := minDistFood(headPos,foodPointList)
-        selectedFood = closestFoodPoint
-        fmt.Print("I've selected food...")
-        dd(selectedFood)
-      }
+
       //log.Print("im hungry and there is food... \n\n")
-        foodDir := goToDir(headPos, selectedFood)
 
-        //fmt.Print("im gooing to " + foodDir + "seems to be a good idea...")
-        if(!isNextMoveFatal(me, prevMove, foodDir)) {
+			if (IsPosInCoordList(selectedFood,validMoves)) {
+					// MOVE IS VALID GO DO IT!
+					nextMove = goToDir(headPos, selectedFood)
+					fmt.Print("This FoodDirection is GOOODDD!!!" + foodDir)
+			} else {
+				if(!isNextMoveFatal(me, prevMove, foodDir)) {
             nextMove = foodDir
         } else {
           fmt.Print("STOP STOP STOP " + foodDir + " is fatal!!!! \n")
           //  nextMove = randomNOOBmove(headPos, prevMove)
+					// GET VALID NON-OOB MOVES:
+					fmt.Print("with my currentHEADPOINT: \n")
+					dd(headPos)
+					fmt.Print("The following points are IN BOUND!") // and no Body-Crash to foodPOINT
+					/* if(isSafeCoordinate(selectedFood, me.Body)) {
+							foodDir := goToDir(headPos, selectedFood)
+							fmt.Print("foodDir" + foodDir +" is a safe Coordinate")
+					}
+ */
           fmt.Print("OK... ive selected " +  nextMove + " as the next move \n")
         }
-      } // end if health < 60
+			}
+        //fmt.Print("im gooing to " + foodDir + "seems to be a good idea...")
+
+      } else {
+				// i'm HealTHY!!! :D
+				nextMoveIsOOB := isMoveOOB(headPos, nextMove)
+			  if (nextMoveIsOOB) {
+			    // CLOCKWISE: invDir(randomNOOBmove(headPos, move))
+			    nextMove = randomNOOBmove(headPos, move)
+			    // COUNTER-CLOCKWISE: randomNOOBmove(headPos, move)
+
+
+			  }
+
+				} // end if health < 60
     }  else {
     log.Print("THERE IS NO FOOD \n\n")
-    noTargetFood = true;
   }
 
 
-  //test := isNextMoveFatal(me, prevMove, nextMove)
+	// TEST THE NEXT MOVE.. IF FATAL.. select random otherMove:
+
+  // test := isNextMoveFatal(me, prevMove, nextMove)
   move = nextMove // finalise the move
   fmt.Print(strconv.Itoa(turn) + ": Move " + move)
   //fmt.Print(test)
@@ -217,7 +247,33 @@ while not frontier.empty():
    }
 */
 
-func validMove(headPos Coord, direction string) CoordList {
+// safe is: NO wall, NO ownBody, (No Enemies) and harderst.. not getting stuck
+func isSafeCoordinate(targetcoord Coord, myBodyPoints CoordList) bool {
+	validCoords := CoordList {
+			Coord{targetcoord.X - 1, targetcoord.Y},
+			Coord{targetcoord.X, targetcoord.Y - 1}, // ONE is fatal
+			Coord{targetcoord.X + 1, targetcoord.Y}, // but which
+	    Coord{targetcoord.X, targetcoord.Y + 1}, // i need my currentDir
+		}
+
+		for _, coord := range validCoords {
+			if coord.X < 0 || coord.Y < 0 { // TOP LEFT CORDER NE
+				return false
+			}
+			if coord.X > rightBound - 1 || coord.Y > botBound - 1 { // OOB Protection
+				return false
+			}
+
+			if(IsPosInCoordList(coord, myBodyPoints)) { // if MYBody is in CoordList, no problem
+				fmt.Print("COORD CRASHING INTO BODY (or tail, or head i guess)")
+				return false
+			}
+
+		} // end for "valid" coords...
+		return true
+	}
+
+func validMoveCoordinates(headPos Coord, direction string, myBodyPoints CoordList) CoordList {
   validCoords := make(CoordList, 0)
    moves := make(CoordList, 0)
 
@@ -263,11 +319,54 @@ func validMove(headPos Coord, direction string) CoordList {
     if coord.X > rightBound - 1 || coord.Y > botBound - 1 { // OOB Protection
       continue
     }
+		// REMOVE OWN BODY coordinates... starting with tail! CoordList
+		if(coord == tailPos) {
+			fmt.Print("COORD CRASHING INTO TAIL")
+			dd(coord)
+			continue
+		}
+
+		if(IsPosInCoordList(coord, myBodyPoints)) { // if MYBody is in CoordList, no problem
+			// CRASHING INTO MYSELF...
+			fmt.Print("COORD CRASHING INTO BODY (or tail, or head i guess)")
+			dd(coord)
+			continue
+		}
+	//	if(coord ) // bodyCoords
+		//if(coord in me.Body) -- remove
+
     moves = append(moves, coord) // then put coord in the possible move list
 		// NEVER OOB!!! :D
-  }
+  } // end for "valid" coords...
+//	fmt.Print("The following x:"+ strconv.Itoa(len(moves))+" is valid \n ")
+//	dd(moves)
   return moves
 }
+
+// returns Index Of[arrayValue]PHP x,y in CoordList
+func idx(target Coord, coordinates CoordList) int {
+	for index, value := range coordinates {
+		if value == target {
+			return index // return index
+		}
+	}
+	return -1
+}
+
+// returns true if pOsition is in List
+func IsPosInCoordList(target Coord, coordList CoordList) bool {
+	// create Bool.
+	return 0 >= idx(target, coordList) // true if index is found (-1 for not found, 0== found at first value)
+}
+
+/* func bodyCoords() CoordList {
+  myBody := make(CoordList, 0) // empty CoordList
+	for _, me := range myBody {
+		myBody = append(list, me.Body...) // extract MyBody
+	}
+	return myBody
+} /*
+
 
 // BFS implementation
 /*
@@ -321,45 +420,49 @@ func (b *BFSPath) bfs(v int) {
 // Check if MoveIs Out of Bounds...
 // What a horror function.... v0.2.0 consider refactor
 func isMoveOOB(headPos Coord, direction string) bool {
-	fmt.Print("\n my head is... and im going -> " + direction)
-	dd(headPos)
+//	fmt.Print("\n my head is... and im going -> " + direction)
+//	dd(headPos)
 
+	if headPos.X - 1 < 0 || headPos.Y - 1 < 0 { // TOP LEFT CORDER NE
+		return true // wallCrash NORTH or LEFT (W)
+	}
+	if headPos.X > rightBound - 1 || headPos.Y > botBound - 1 { // OOB Protection
+		return true // wallCrash South or EAST
+	}
 
 	fmt.Print( "\n\n")
   switch direction {
     case "down":
-			fatalMove := Coord{headPos.X, headPos.Y + 1} // down fatal if going up..
-			dd(fatalMove)
-			fmt.Print("down fatal...")
-      if (headPos.Y + 1 < botBound) {
+//			fatalMove := Coord{headPos.X, headPos.Y + 1} // down fatal if going up..
+//			dd(fatalMove)
+//			fmt.Print("down fatal...")
+			if headPos.X > rightBound - 1 || headPos.Y > botBound - 1 { // OOB Protection
+				return true // wallCrash South or EAST
+			}
+			if (headPos.Y + 1 < botBound) {
           return false
       }
+
     case "up":
-			fatalMove := Coord{headPos.X, headPos.Y - 1} // down fatal if going up..
-			dd(fatalMove)
-			fmt.Print("is a fatal move going up...")
+//			fatalMove := Coord{headPos.X, headPos.Y - 1} // down fatal if going up..
+//			dd(fatalMove)
+//			fmt.Print("is a fatal move going up...")
+			if headPos.X - 1 < 0 || headPos.Y - 1 < 0 { // TOP LEFT CORDER NE
+				return true // wallCrash NORTH or LEFT (W)
+			}
       if (headPos.Y + 1 > topBound) {
         return false
       }
+
     case "left":
-				fatalMove := Coord{headPos.X - 1, headPos.Y} // fatal if going left.
-				fmt.Print("fatal move if going left \n")
-				dd(fatalMove)
       if (headPos.X + 1 > leftBound) {
         return false
       }
     case "right":
-		//	fatalMove := Coord{headPos.X + 1, headPos.Y} // targetPoint is fatal if going right
-      if (headPos.X + 1 < rightBound) {
+	    if (headPos.X + 1 < rightBound) {
         return false
       }
   }
-
-	// GET VALID NON-OOB MOVES:
- 	fmt.Print("with my currentHEADPOINT: \n")
-	dd(headPos)
-	fmt.Print("The following points are IN BOUND!") // and no Body-Crash to foodPOINT
-	dd(validMove(headPos, direction))
   return true
 }
 
