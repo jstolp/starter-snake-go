@@ -88,6 +88,22 @@ func Start(res http.ResponseWriter, req *http.Request) {
 	})
 }
 
+/*
+//python bfs 
+
+frontier = Queue()
+frontier.put(start )
+visited = {}
+visited[start] = True
+
+while not frontier.empty():
+   current = frontier.get()
+   for next in graph.neighbors(current):
+      if next not in visited:
+         frontier.put(next)
+         visited[next] = True
+	 */
+
 // Check if MoveIs Out of Bounds...
 // What a horror function.... v0.2.0 consider refactor
 func isMoveOOB(headPos Coord, direction string) bool {
