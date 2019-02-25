@@ -34,23 +34,6 @@ var endCicle bool = false;
 var selectedFood Coord;
 var noTargetFood bool = true; // i have no target food.
 
-/* heads: "beluga" "bendr" "dead" "evil" "fang" "pixel" "regular" "safe" "sand-worm" "shades" "silly" "smile" "tongue"
-tails: "block-bum" "bolt" "curled" "fat-rattle" "freckled" "hook" "pixel" "regular" "round-bum" "sharp" "skinny" "small-rattle" */
-
-func shrinkArena() {
-	leftBound = leftBound + 1
-	topBound = topBound + 1
-	rightBound = rightBound - 1
-	botBound = botBound - 1
-	// edgeSnakeLimit = ((botBound - 1) * (rightBound - 1)) - FALSE ASSUMPTION. it doesn't work if you shrink, because you are bigger
-
-	log.Print("BOARD Size: TOP LEFT  NW Corner x:" + strconv.Itoa(topBound) + " , " + strconv.Itoa(leftBound))
-	log.Print("BOARD Size: BOT RIGHT SE Corner x:" + strconv.Itoa(botBound) + "," + strconv.Itoa(rightBound))
-	log.Println("Snake Edge Limit: " + strconv.Itoa(edgeSnakeLimit))
-
-	log.Print("Shrunk the Area by 1x1... new SIZES \n")
-}
-
 func Start(res http.ResponseWriter, req *http.Request) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 	decoded := SnakeRequest{}
@@ -76,6 +59,8 @@ func Start(res http.ResponseWriter, req *http.Request) {
 	if(numOfStartingSnakes == 1) {
 		log.Print("\n\n It's Gonna be a SOLO GAME \n")
 	}
+	/* heads: "beluga" "bendr" "dead" "evil" "fang" "pixel" "regular" "safe" "sand-worm" "shades" "silly" "smile" "tongue"
+	tails: "block-bum" "bolt" "curled" "fat-rattle" "freckled" "hook" "pixel" "regular" "round-bum" "sharp" "skinny" "small-rattle" */
 	/*
 	 e19c41 - orange test 2
    00ff55 - green
@@ -86,77 +71,6 @@ func Start(res http.ResponseWriter, req *http.Request) {
 		HeadType: "tongue",
 		TailType: "curled",
 	})
-}
-
-/*
-//python bfs 
-
-frontier = Queue()
-frontier.put(start )
-visited = {}
-visited[start] = True
-
-while not frontier.empty():
-   current = frontier.get()
-   for next in graph.neighbors(current):
-      if next not in visited:
-         frontier.put(next)
-         visited[next] = True
-	 */
-
-// Check if MoveIs Out of Bounds...
-// What a horror function.... v0.2.0 consider refactor
-func isMoveOOB(headPos Coord, direction string) bool {
-	switch direction {
-		case "down":
-			if (headPos.Y + 1 < botBound) {
-					return false
-			}
-		case "up":
-			if (headPos.Y + 1 > topBound) {
-				return false
-			}
-		case "left":
-			if (headPos.X + 1 > leftBound) {
-				return false
-			}
-		case "right":
-			if (headPos.X + 1 < rightBound) {
-				return false
-			}
-	}
-	return true
-}
-
-// closestFoodPoint
-func minDistFood(headPos Coord, food []Coord) Coord {
-	min := food[0]
-	for _, f := range food {
-		if dist(min, headPos) < dist(f, headPos) {
-			min = f
-		}
-	}
-	return min
-}
-
-// TIME TO DEPRICATE THIS FUNCTION. I NEED A MOVE THAT IS... 1 NOT OOB.
-// 1. Not into a wall!
-// 2. not into Myself.
-// 3. not into my Body.
-// 4 (Battle) - not into another snake.
-func randomNOOBmove(headPos Coord, currentDir string) string {
-  //randomInt = rand.Intn(100)
-	switch currentDir {
-		case "down":
-				return "right"
-		case "up":
-				return "left"
-		case "left":
-				return "down"
-		case "right":
-				return "up"
-	}
-	return "down"
 }
 
 func Move(res http.ResponseWriter, req *http.Request) {
@@ -265,6 +179,90 @@ log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: 
 	prevMove = move // Re-allocate move command to prev/last move\
 }
 
+/*
+//python bfs
+
+frontier = Queue()
+frontier.put(start )
+visited = {}
+visited[start] = True
+
+while not frontier.empty():
+   current = frontier.get()
+   for next in graph.neighbors(current):
+      if next not in visited:
+         frontier.put(next)
+         visited[next] = True
+	 */
+
+// Check if MoveIs Out of Bounds...
+// What a horror function.... v0.2.0 consider refactor
+func isMoveOOB(headPos Coord, direction string) bool {
+	switch direction {
+		case "down":
+			if (headPos.Y + 1 < botBound) {
+					return false
+			}
+		case "up":
+			if (headPos.Y + 1 > topBound) {
+				return false
+			}
+		case "left":
+			if (headPos.X + 1 > leftBound) {
+				return false
+			}
+		case "right":
+			if (headPos.X + 1 < rightBound) {
+				return false
+			}
+	}
+	return true
+}
+
+// closestFoodPoint
+func minDistFood(headPos Coord, food []Coord) Coord {
+	min := food[0]
+	for _, f := range food {
+		if dist(min, headPos) < dist(f, headPos) {
+			min = f
+		}
+	}
+	return min
+}
+
+// TIME TO DEPRICATE THIS FUNCTION. I NEED A MOVE THAT IS... 1 NOT OOB.
+// 1. Not into a wall!
+// 2. not into Myself.
+// 3. not into my Body.
+// 4 (Battle) - not into another snake.
+func randomNOOBmove(headPos Coord, currentDir string) string {
+  //randomInt = rand.Intn(100)
+	switch currentDir {
+		case "down":
+				return "right"
+		case "up":
+				return "left"
+		case "left":
+				return "down"
+		case "right":
+				return "up"
+	}
+	return "down"
+}
+
+func shrinkArena() {
+	leftBound = leftBound + 1
+	topBound = topBound + 1
+	rightBound = rightBound - 1
+	botBound = botBound - 1
+	// edgeSnakeLimit = ((botBound - 1) * (rightBound - 1)) - FALSE ASSUMPTION. it doesn't work if you shrink, because you are bigger
+
+	log.Print("BOARD Size: TOP LEFT  NW Corner x:" + strconv.Itoa(topBound) + " , " + strconv.Itoa(leftBound))
+	log.Print("BOARD Size: BOT RIGHT SE Corner x:" + strconv.Itoa(botBound) + "," + strconv.Itoa(rightBound))
+	log.Println("Snake Edge Limit: " + strconv.Itoa(edgeSnakeLimit))
+
+	log.Print("Shrunk the Area by 1x1... new SIZES \n")
+}
 
 func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
 		// doing a 180 is never safe, so check for that...
