@@ -25,6 +25,7 @@ var nextMove string = "";
 var prevMove string = "";
 var headPos Coord;
 var tailPos Coord;
+var me Snake;
 var health int = 100;
 var numOfStartingSnakes int = 1;
 var numSnakesLeft int = 1;
@@ -49,11 +50,11 @@ func Start(res http.ResponseWriter, req *http.Request) {
   topBound, leftBound = 1, 1; // Set NW bound, X, Y
   botBound, rightBound = decoded.Board.Height, decoded.Board.Width // SE corner X, Y
 
-  edgeSnakeLimit = (((botBound - 1) * 2) + ((rightBound - 1) * 2))
+  //edgeSnakeLimit = (((botBound - 1) * 2) + ((rightBound - 1) * 2))
 
   log.Print("BOARD Size: TOP LEFT  NW Corner x:" + strconv.Itoa(topBound) + " , " + strconv.Itoa(leftBound))
   log.Print("BOARD Size: BOT RIGHT SE Corner x:" + strconv.Itoa(botBound) + "," + strconv.Itoa(rightBound))
-  log.Println("Snake Edge Limit: " + strconv.Itoa(edgeSnakeLimit))
+//  log.Println("Snake Edge Limit: " + strconv.Itoa(edgeSnakeLimit))
   log.Print("Enemy Snakes: " + strconv.Itoa(numOfStartingSnakes - 1) + "\n\n")
 
   log.Print("Start Pos: " + strconv.Itoa(headPos.X) + "," + strconv.Itoa(headPos.Y))
@@ -82,17 +83,17 @@ func Move(res http.ResponseWriter, req *http.Request) {
     log.Printf("Bad move request: %v", err)
   }
 
-  me := decoded.You
-  headPos := getHeadPos(me)
+  me = decoded.You
+  headPos = getHeadPos(me)
   foodPointList = decoded.Board.Food
-//  tailPos := getTailPos(me)
+  tailPos = getTailPos(me)
 
   health = me.Health
   //myLength := len(me.Body)
   numSnakesLeft = len(decoded.Board.Snakes)
   enemySnakes = numSnakesLeft - 1
   turn = decoded.Turn
-  if (health > 99) {
+  if (99 < health) {
     fmt.Print("I JUST ATE FOOOOOOD \n\n")
     // i just ate. reset foodPoint
   }
@@ -123,22 +124,6 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
 log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
 
-//
-  nextMoveIsOOB := isMoveOOB(headPos, nextMove)
-  if (nextMoveIsOOB) {
-    // CLOCKWISE: invDir(randomNOOBmove(headPos, move))
-    nextMove = randomNOOBmove(headPos, move)
-    // COUNTER-CLOCKWISE: randomNOOBmove(headPos, move)
-
-
-  } else {
-		// next move isn't OOB but do i kill myself?
-	//	fmt.Print("with my currentHEADPOINT: \n")
-	//	dd(headPos)
-//		fmt.Print("The following points are IN BOUND!") // and no Body-Crash to foodPOINT
-
-		//dd() // isNextMoveValid??
-	}
 
 	validMoves := validMoveCoordinates(headPos, nextMove, me.Body)
 
@@ -146,7 +131,7 @@ log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: 
 	// if there is a direct path to the food... Go for it!
   if(len(foodPointList) > 0) {
 
-    if (health < 40) {
+    if (health < 1) {
         //closestFoodPoint := minDistFood(headPos,foodPointList)
         //selectedFood = closestFoodPoint
 				foodDir := goToDir(headPos, selectedFood)
@@ -181,6 +166,8 @@ log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: 
         //fmt.Print("im gooing to " + foodDir + "seems to be a good idea...")
 
       } else {
+        // NOT hungry...
+
 				// i'm HealTHY!!! :D
 				nextMoveIsOOB := isMoveOOB(headPos, nextMove)
 			  if (nextMoveIsOOB) {
@@ -195,6 +182,15 @@ log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: 
     }  else {
     log.Print("THERE IS NO FOOD \n\n")
   }
+
+//  nextMoveIsOOB := isMoveOOB(headPos, nextMove)
+//  if (nextMoveIsOOB) {
+    // CLOCKWISE: invDir(randomNOOBmove(headPos, move))
+//    nextMove = randomNOOBmove(headPos, move)
+    // COUNTER-CLOCKWISE: randomNOOBmove(headPos, move)
+
+
+  //}
 
 
 	// TEST THE NEXT MOVE.. IF FATAL.. select random otherMove:
@@ -264,7 +260,7 @@ func isSafeCoordinate(targetcoord Coord, myBodyPoints CoordList) bool {
 				return false
 			}
 
-			if(IsPosInCoordList(coord, myBodyPoints)) { // if MYBody is in CoordList, no problem
+			if IsPosInCoordList(coord, myBodyPoints) { // if MYBody is in CoordList, no problem
 				fmt.Print("COORD CRASHING INTO BODY (or tail, or head i guess)")
 				return false
 			}
@@ -320,13 +316,9 @@ func validMoveCoordinates(headPos Coord, direction string, myBodyPoints CoordLis
       continue
     }
 		// REMOVE OWN BODY coordinates... starting with tail! CoordList
-		if(coord == tailPos) {
-			fmt.Print("COORD CRASHING INTO TAIL")
-			dd(coord)
-			continue
-		}
-
-		if(IsPosInCoordList(coord, myBodyPoints)) { // if MYBody is in CoordList, no problem
+		//if(coord == tailPos)
+    // COORD TAILPOS IS ACTUALLY OK, because it moves one step next turn! :D
+		if(IsPosInCoordList(coord, myBodyPoints)) {
 			// CRASHING INTO MYSELF...
 			fmt.Print("COORD CRASHING INTO BODY (or tail, or head i guess)")
 			dd(coord)
@@ -423,10 +415,13 @@ func isMoveOOB(headPos Coord, direction string) bool {
 //	fmt.Print("\n my head is... and im going -> " + direction)
 //	dd(headPos)
 
-	if headPos.X - 1 < 0 || headPos.Y - 1 < 0 { // TOP LEFT CORDER NE
+	if (headPos.Y == 0 && direction == "up") { // TOP LEFT CORDER NE
+    fmt.Print("wallcrash north !!!", headPos)
 		return true // wallCrash NORTH or LEFT (W)
 	}
-	if headPos.X > rightBound - 1 || headPos.Y > botBound - 1 { // OOB Protection
+
+if headPos.X > rightBound - 1 || headPos.Y > botBound - 1 { // OOB Protection
+    fmt.Print("WALLCRASH South OR EAST.", headPos)
 		return true // wallCrash South or EAST
 	}
 
@@ -437,6 +432,7 @@ func isMoveOOB(headPos Coord, direction string) bool {
 //			dd(fatalMove)
 //			fmt.Print("down fatal...")
 			if headPos.X > rightBound - 1 || headPos.Y > botBound - 1 { // OOB Protection
+        fmt.Print("im going down, wallcrash south or east...", headPos)
 				return true // wallCrash South or EAST
 			}
 			if (headPos.Y + 1 < botBound) {
@@ -447,15 +443,15 @@ func isMoveOOB(headPos Coord, direction string) bool {
 //			fatalMove := Coord{headPos.X, headPos.Y - 1} // down fatal if going up..
 //			dd(fatalMove)
 //			fmt.Print("is a fatal move going up...")
-			if headPos.X - 1 < 0 || headPos.Y - 1 < 0 { // TOP LEFT CORDER NE
-				return true // wallCrash NORTH or LEFT (W)
-			}
+			//if headPos.X - 1 < 0 || headPos.Y - 1 < 0 { // TOP LEFT CORDER NE
+			//	return true // wallCrash NORTH or LEFT (W)
+		//	}
       if (headPos.Y + 1 > topBound) {
         return false
       }
 
     case "left":
-      if (headPos.X + 1 > leftBound) {
+      if (headPos.X > leftBound - 1) {
         return false
       }
     case "right":
@@ -526,11 +522,11 @@ func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
 
     // if dist to my own tail is 1, and i'm going in the same direction...
     // i'll die...
-    if (dist(headPos, tailPos) == 1 && targetDir == goToDir(headPos, tailPos)) {
-      log.Print("CRASHING INTO MY OWN TAIL IN ... 3 . 2.. .1.. no... next MOVE ahhaah \n\n")
-      log.Print()
-      return true
-    }
+  //  if (dist(headPos, tailPos) == 1 && targetDir == goToDir(headPos, tailPos)) {
+  //    log.Print("CRASHING INTO MY OWN TAIL IN ... 3 . 2.. .1.. no... next MOVE ahhaah \n\n")
+  //    log.Print()
+  //    return true
+  //  }
 
     //log.Print("The move " + targetDir + " is safe...\n")
     return false
