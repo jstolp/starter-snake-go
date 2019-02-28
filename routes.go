@@ -131,7 +131,7 @@ log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: 
 	// if there is a direct path to the food... Go for it!
   if(len(foodPointList) > 0) {
 
-    if (health < 1) {
+    if (health < 40) {
         //closestFoodPoint := minDistFood(headPos,foodPointList)
         //selectedFood = closestFoodPoint
 				foodDir := goToDir(headPos, selectedFood)
@@ -143,8 +143,14 @@ log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: 
 
 			if (IsPosInCoordList(selectedFood,validMoves)) {
 					// MOVE IS VALID GO DO IT!
-					nextMove = goToDir(headPos, selectedFood)
-					fmt.Print("This FoodDirection is GOOODDD!!!" + foodDir)
+
+          if(!isNextMoveFatal(me, prevMove, foodDir)) {
+            fmt.Print("nextMove: " + foodDir + " because its not fatall.... \n")
+            nextMove = foodDir
+          } else {
+            	fmt.Print("This FoodDirection is FATAL: " + foodDir)
+              nextMove = randomNOOBmove(headPos, nextMove)
+          }
 			} else {
 				if(!isNextMoveFatal(me, prevMove, foodDir)) {
             nextMove = foodDir
@@ -261,7 +267,7 @@ func isSafeCoordinate(targetcoord Coord, myBodyPoints CoordList) bool {
 			}
 
 			if IsPosInCoordList(coord, myBodyPoints) { // if MYBody is in CoordList, no problem
-				fmt.Print("COORD CRASHING INTO BODY (or tail, or head i guess)")
+				fmt.Print("isSafeCoord: COORD CRASHING INTO BODY (or tail, or head i guess)")
 				return false
 			}
 
@@ -320,8 +326,8 @@ func validMoveCoordinates(headPos Coord, direction string, myBodyPoints CoordLis
     // COORD TAILPOS IS ACTUALLY OK, because it moves one step next turn! :D
 		if(IsPosInCoordList(coord, myBodyPoints)) {
 			// CRASHING INTO MYSELF...
-			fmt.Print("COORD CRASHING INTO BODY (or tail, or head i guess)")
-			dd(coord)
+			//fmt.Print("VALIDMOVES: COORD CRASHING INTO BODY (or tail, or head i guess)")
+			//dd(coord)
 			continue
 		}
 	//	if(coord ) // bodyCoords
@@ -522,11 +528,10 @@ func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
 
     // if dist to my own tail is 1, and i'm going in the same direction...
     // i'll die...
-  //  if (dist(headPos, tailPos) == 1 && targetDir == goToDir(headPos, tailPos)) {
-  //    log.Print("CRASHING INTO MY OWN TAIL IN ... 3 . 2.. .1.. no... next MOVE ahhaah \n\n")
-  //    log.Print()
-  //    return true
-  //  }
+    if (dist(headPos, tailPos) == 1 && targetDir == goToDir(headPos, tailPos)) {
+      log.Print("Dist to TAIL is 0... and i want to go directly to my own tail... i'm dead... \n")
+      return true
+    }
 
     //log.Print("The move " + targetDir + " is safe...\n")
     return false
