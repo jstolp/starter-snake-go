@@ -18,6 +18,9 @@ A* search is what i need....
 
 https://github.com/beefsack/go-astar
 
+example as basr:
+https://johnflux.com/2015/05/02/nokia-6110-part-3-algorithms/
+
 
 in order to do that... i need a priority queue in GO
 
