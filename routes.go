@@ -313,6 +313,19 @@ func mapToGrid(ast astar.AStar, decoded SnakeRequest, grid_size int) ([][]string
      ast.FillTile(astar.Point{i, grid_size - 1}, -1)
  }
 
+otherSnakes := decoded.Board.Snakes
+
+for _, snake := range otherSnakes {
+  for _, coord := range snake.Body {
+    x := coord.X
+    y := coord.Y
+
+    if grid[x][y] != "#" {
+       grid[x][y] = "+"
+     }
+  }
+}
+
 /**
  * H -> Head
  * T -> Tail
@@ -333,30 +346,34 @@ func mapToGrid(ast astar.AStar, decoded SnakeRequest, grid_size int) ([][]string
   }
 //}
 
+
+
  myBody := me.Body;
  for _, coord := range myBody {
     x := coord.X
     y := coord.Y
 
-    if grid[x][y] != "#" {
+    ast.FillTile(astar.Point{x, y}, -1)
+    if (grid[x][y] != "#") {
        grid[x][y] = "*"
      }
  }
 
  headPos := getHeadPos(me)
 
- r := headPos.X
- c := headPos.Y
+ headX := headPos.X
+ headY := headPos.Y
 
- if grid[r][c] != "#" {
-    grid[r][c] = "H"
+ if grid[headX][headY] != "#" {
+    grid[headX][headY] = "H"
   }
 
   tailPos := getTailPos(me)
 
-  r = tailPos.X
-  c = tailPos.Y
+  r := tailPos.X
+  c := tailPos.Y
 
+  ast.ClearTile(astar.Point{r, c}) // clear tail tile
   if grid[r][c] != "#" {
      grid[r][c] = "T"
    }
