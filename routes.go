@@ -317,20 +317,21 @@ func mapToGrid(ast astar.AStar, me Snake, grid_size int) ([][]string) {
  c := headPos.Y
 
  if grid[r][c] != "#" {
-    grid[r][c] = "A"
+    grid[r][c] = "H"
   }
 
   tailPos := getTailPos(me)
 
-  r := tailPos.X
-  c := tailPos.Y
+  r = tailPos.X
+  c = tailPos.Y
 
   if grid[r][c] != "#" {
-     grid[r][c] = "Z"
+     grid[r][c] = "T"
    }
 
  return grid;
 }
+
 func validMoveCoordinates(headPos Coord, direction string, myBodyPoints CoordList) CoordList {
   validCoords := make(CoordList, 0)
    moves := make(CoordList, 0)
