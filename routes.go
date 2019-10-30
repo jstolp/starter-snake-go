@@ -92,9 +92,9 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
   rows, cols := decoded.Board.Height, decoded.Board.Width
   // Build a new AStar object from Height x Width
-  astarBoard := astar.NewAStar(rows, cols)
+  astarBoard := astar.NewAStar(rows + 1, cols + 1)
 
-  grid := mapToGrid(astarBoard, me, rows)
+  grid := mapToGrid(astarBoard, decoded, rows)
 
   PrintGrid(grid);
 
@@ -289,9 +289,11 @@ func isSafeCoordinate(targetcoord Coord, myBodyPoints CoordList) bool {
 /**
 returns grid,
 */
-func mapToGrid(ast astar.AStar, me Snake, grid_size int) ([][]string) {
+func mapToGrid(ast astar.AStar, decoded SnakeRequest, grid_size int) ([][]string) {
 
   grid := make([][]string, grid_size)
+  me := decoded.You
+  foodList := decoded.Board.Food
 
   for i := 0; i < len(grid); i++ {
       grid[i] = make([]string, grid_size)
@@ -309,6 +311,36 @@ func mapToGrid(ast astar.AStar, me Snake, grid_size int) ([][]string) {
 
      grid[i][grid_size-1] = "#"
      ast.FillTile(astar.Point{i, grid_size - 1}, -1)
+ }
+
+/**
+ * H -> Head
+ * T -> Tail
+ * ! -> Food
+ * # -> Wall
+ * * snakeBody
+
+ */
+//if (len(foodList) > 0) {
+  // there is food on the board.
+  for _, coord := range foodList {
+     x := coord.X
+     y := coord.Y
+
+     if grid[x][y] != "#" {
+        grid[x][y] = "!"
+      }
+  }
+//}
+
+ myBody := me.Body;
+ for _, coord := range myBody {
+    x := coord.X
+    y := coord.Y
+
+    if grid[x][y] != "#" {
+       grid[x][y] = "*"
+     }
  }
 
  headPos := getHeadPos(me)
