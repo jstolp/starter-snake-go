@@ -316,22 +316,33 @@ func mapToGrid(ast astar.AStar, decoded SnakeRequest, grid_size int) ([][]string
 otherSnakes := decoded.Board.Snakes
 
 for _, snake := range otherSnakes {
-  for _, coord := range snake.Body {
+  for i, coord := range snake.Body {
     x := coord.X
     y := coord.Y
 
     if grid[x][y] != "#" {
-       grid[x][y] = "+"
+      if(i == 0) {
+        grid[x][y] = "h"
+        ast.FillTile(astar.Point{x, y}, -1) // not traversable
+      } else if(i == len(snake.Body) - 1) {
+        grid[x][y] = "t"
+      } else {
+        ast.FillTile(astar.Point{x, y}, -1) // not traversable
+        grid[x][y] = "+"
+      }
      }
   }
 }
 
 /**
  * H -> Head
+ * h -> enemy head
  * T -> Tail
+ * T -> enemy tail
  * ! -> Food
  * # -> Wall
  * * snakeBody
+ * + enemySnake Body
 
  */
 //if (len(foodList) > 0) {
