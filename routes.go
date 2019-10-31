@@ -10,10 +10,6 @@ import (
 	"strconv"
 )
 
-var leftBound int = 1;
-var topBound int = 1;
-var rightBound int = 0;
-var botBound int = 0;
 
 var edgeSnakeLimit int = 0;
 var turn int = 0;
@@ -41,16 +37,10 @@ func Start(res http.ResponseWriter, req *http.Request) {
 	}
 
   headPos = decoded.You.Body[0]
-  //foodPointList := decoded.Board.Food
-  numOfStartingSnakes = len(decoded.Board.Snakes)
-  topBound, leftBound = 1, 1; // Set NW bound, X, Y
-	botBound, rightBound = decoded.Board.Height, decoded.Board.Width // SE corner X, Y
 	
-	log.Print("BOARD Size: TOP LEFT  NW Corner x:" + strconv.Itoa(topBound) + " , " + strconv.Itoa(leftBound))
-	log.Print("BOARD Size: BOT RIGHT SE Corner x:" + strconv.Itoa(botBound) + "," + strconv.Itoa(rightBound))
-	log.Print("Enemy Snakes: " + strconv.Itoa(numOfStartingSnakes - 1) + "\n\n")
+		log.Print("Enemy Snakes: " + strconv.Itoa(numOfStartingSnakes - 1) + "\n\n")
 
-	log.Print("Start Pos: " + strconv.Itoa(headPos.X) + "," + strconv.Itoa(headPos.Y))
+	fmt.Print("Start Pos: " + strconv.Itoa(headPos.X) + "," + strconv.Itoa(headPos.Y))
 	if(numOfStartingSnakes == 1) {
 		log.Print("\n\n It's Gonna be a SOLO GAME \n")
 	}
@@ -75,6 +65,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		log.Printf("Bad move request: %v", err)
 	}
 
+/*
 	me := decoded.You
 	headPos := getHeadPos(me)
 	foodPointList = decoded.Board.Food
@@ -83,7 +74,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	numSnakesLeft = len(decoded.Board.Snakes)
 	enemySnakes = numSnakesLeft - 1
 	turn = decoded.Turn
-
+*/
 	respond(res, MoveResponse{
 		Move: nextMove,
 	})
