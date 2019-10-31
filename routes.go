@@ -11,6 +11,7 @@ import (
 	"strconv"
 )
 
+type CoordList []Coord // remove if api is imported correctly
 
 var edgeSnakeLimit int = 0;
 var turn int = 0;
@@ -25,6 +26,12 @@ var numSnakesLeft int = 1;
 var enemySnakes int = 0;
 var foodPointList []Coord;
 var endCicle bool = false;
+var boardHeight int = 0;
+var boardWidth int = 0;
+
+/* SNAKE SETUP */
+var HUNGRY_TRESHOLD  int = 90; // defines when snake goes looking for food.
+
 
 /* heads: "beluga" "bendr" "dead" "evil" "fang" "pixel" "regular" "safe" "sand-worm" "shades" "silly" "smile" "tongue"
 tails: "block-bum" "bolt" "curled" "fat-rattle" "freckled" "hook" "pixel" "regular" "round-bum" "sharp" "skinny" "small-rattle" */
@@ -38,10 +45,13 @@ func Start(res http.ResponseWriter, req *http.Request) {
 	}
 
 	headPos = decoded.You.Body[0]
+	boardHeight, boardWidth = decoded.Board.Height, decoded.Board.Width // SE corner X, Y
 	
 	log.Print("Enemy Snakes: " + strconv.Itoa(numOfStartingSnakes - 1) + "\n\n")
 
 	fmt.Print("Start Pos: " + strconv.Itoa(headPos.X) + "," + strconv.Itoa(headPos.Y))
+	
+	
 	if(numOfStartingSnakes == 1) {
 		log.Print("\n\n It's Gonna be a SOLO GAME \n")
 	}
@@ -66,19 +76,39 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		log.Printf("Bad move request: %v", err)
 	}
 
-	var moveCoord []api.Coord
-	// if there is no food chase your tail
-	if decoded.You.Health > 30 && ((len(decoded.You.Body) >= averageSnakeLength && len(decoded.You.Body) >= 5) || len(decoded.Board.Food) == 0) {
-		moveCoord = astar.Astar(decoded.Board.Height, decoded.Board.Width, decoded.You, decoded.Board.Snakes, astar.ChaseTail(decoded.You.Body))
+	var moveCoord []Coord
+	turn = decoded.Turn
+	me := decoded.You
+	health = me.Health
+	headPos = decoded.You.Body[0]
+	tailPos = getTailPos(me)
+	enemySnakes := decoded.Board.Snakes
+	foodList := decoded.Board.Food
+	
+	if (len(decoded.Board.Food) == 0) && len(decoded.You.Body) >= 4 {
+		// no food? chase tail. but only if i'm big enough
+		log.Print("no food on board... chasing tail...")
+		moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
+	} else if (health > HUNGRY_TRESHOLD) &&  len(decoded.You.Body) >= 4 {
+		// there is food but i'm not hungry, still chase tail only if i'm big enough.
+		log.Print("chasing tail")
+		moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
+	} else if (health > HUNGRY_TRESHOLD) {
+		log.Print("not big enough... moving to corner")
+		targetCorner := closestCorner(boardHeight, boardWidth, headPos)
+		moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, targetCorner)
 	} else {
-		moveCoord = astar.Astar(decoded.Board.Height, decoded.Board.Width, decoded.You, decoded.Board.Snakes, astar.NearestFood(decoded.Board.Food, decoded.You.Body[0]))
+		moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, astar.NearestFood(foodList, headPos))
 		if moveCoord == nil {
-			moveCoord = astar.Astar(decoded.Board.Height, decoded.Board.Width, decoded.You, decoded.Board.Snakes, astar.ChaseTail(decoded.You.Body))
+			moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, astar.ChaseTail(me.Body))
 		}
 	}
 
-	nextMove = astar.Heading(decoded.You.Body[0], moveCoord[1])
+	nextMove = astar.Heading(headPos, moveCoord[1])
+
+	closestCorner(boardHeight, boardWidth, headPos)
 	
+	fmt.Print("T " + strconv.Itoa(turn) + " Health:" + strconv.Itoa(health) + " Move: " + nextMove + "\n")
 	respond(res, MoveResponse{
 		Move: nextMove,
 	})
@@ -96,18 +126,112 @@ func getTailPos(target Snake) Coord {
   return body[len(body) - 1]
 }
 
+func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
+		// doing a 180 is never safe, so check for that...
+		flipDir := invDir(currentDir)
+		if(flipDir == targetDir) {
+			log.Print("The move is " + targetDir + "but in going " + currentDir + "That would be fatal...\n")
+			return true
+		}
+		// check if a move is NOT_OUT_OF_BOUNDS (hit a wall) WALL SNAKE
+		if (isMoveOOB(headPos, targetDir)) {
+			log.Print("Next Move is Fatal because of a BOUNDARY " + targetDir + "\n")
+			return true
+		}
+
+		// if dist to my own tail is 1, and i'm going in the same direction...
+		// i'll die...
+		if (dist(headPos, tailPos) == 1 && targetDir == goToDir(headPos, tailPos)) {
+			log.Print("CRASHING INTO MY OWN TAIL IN ... 3 . 2.. .1.. no... next MOVE ahhaah \n\n")
+			log.Print()
+			return true
+		}
+
+		//log.Print("The move " + targetDir + " is safe...\n")
+		return false
+}
+
+func isMoveOOB(headPos Coord, direction string) bool {
+	switch direction {
+		case "down":
+			if (headPos.Y + 1 < boardHeight) {
+					return false
+			}
+		case "up":
+			if (headPos.Y + 1 > 1) {
+				return false
+			}
+		case "left":
+			if (headPos.X + 1 > 1) {
+				return false
+			}
+		case "right":
+			if (headPos.X + 1 < boardWidth) {
+				return false
+			}
+	}
+	return true
+}
+/* Returns the closestCorner */
+func closestCorner(boardHeight int, boardWidth int, headPos Coord) Coord {
+		distToCorner := -1
+		targetCoord := Coord{0,0}
+		corners := CoordList {
+			Coord{1,1},
+			Coord{boardWidth-1,1},
+			Coord{1, boardHeight - 1},
+			Coord{boardHeight - 1, boardWidth -1},
+		}
+
+		for _, coord := range corners {
+			
+			if( dist(headPos, coord) > distToCorner) {
+				distToCorner = dist(headPos, coord)
+				targetCoord = coord
+			}
+		} // end for "valid" coords...
+
+
+		//log.Print("closestCord is: " + strconv.Itoa(targetCoord.X) + "," + strconv.Itoa(targetCoord.Y))
+		return targetCoord	
+}
+
+/* Inverses direction */
+func invDir(currentDir string) string {
+		dir := ""
+		if(currentDir == "down") {
+				dir = "up"
+		}
+		if(currentDir == "up") {
+			dir = "down"
+		}
+		if(currentDir == "left") {
+			dir = "right"
+		}
+		if(currentDir == "right") {
+			dir = "left"
+		}
+		return dir
+}
+
+/* move from coord to coord -> returns MOVE */
+func goToDir(curr Coord, next Coord) string {
+	dir := ""
+	if curr.X < next.X {
+		dir = "right"
+	} else if curr.X > next.X {
+		dir = "left"
+	} else if curr.Y < next.Y {
+		dir = "down"
+	} else if curr.Y > next.Y {
+		dir = "up"
+	}
+	return dir
+}
 
 /* Dist to function in steps (int) */
 func dist(a Coord, b Coord) int {
 	return int(math.Abs(float64(b.X-a.X)) + math.Abs(float64(b.Y-a.Y)))
-}
-
-func GetBodies(snakes SnakesList) []Coord {
-  list := make([]Coord, 0)
-  for _, s := range snakes {
-    list = append(list, s.Body...)
-  }
-  return list
 }
 
 // closestFoodPoint

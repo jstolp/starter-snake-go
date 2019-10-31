@@ -1,33 +1,33 @@
 package astar
 
 import (
-	"github.com/jstolp/pofadder-go/api"
+	. "github.com/jstolp/pofadder-go/api"
 	"math"
 )
 
 /*
      ripped from alecj1240/alec-snake, astar
 	G - the amount of steps its taken to get to that Node
-	H - the heuristic - estimation from this Node to the destination
+	H - the heuristic - estimation from this Node to the target
 	F - the sum of G and H
 	ParentCoords - the coordinates of the previous step (Node)
 */
 
 // Node holds: coordinates, G, H, F, parent coords
 type Node struct {
-	Coord        api.Coord
+	Coord        Coord
 	G            int
 	H            int
 	F            int
-	ParentCoords api.Coord
+	ParentCoords Coord
 }
 
-func GetAdjacentCoords(Location api.Coord) []api.Coord {
-	var adjacentCoords = make([]api.Coord, 0)
-	adjacentCoords = append(adjacentCoords, api.Coord{X: Location.X + 1, Y: Location.Y})
-	adjacentCoords = append(adjacentCoords, api.Coord{X: Location.X - 1, Y: Location.Y})
-	adjacentCoords = append(adjacentCoords, api.Coord{X: Location.X, Y: Location.Y + 1})
-	adjacentCoords = append(adjacentCoords, api.Coord{X: Location.X, Y: Location.Y - 1})
+func GetAdjacentCoords(Location Coord) []Coord {
+	var adjacentCoords = make([]Coord, 0)
+	adjacentCoords = append(adjacentCoords, Coord{X: Location.X + 1, Y: Location.Y})
+	adjacentCoords = append(adjacentCoords, Coord{X: Location.X - 1, Y: Location.Y})
+	adjacentCoords = append(adjacentCoords, Coord{X: Location.X, Y: Location.Y + 1})
+	adjacentCoords = append(adjacentCoords, Coord{X: Location.X, Y: Location.Y - 1})
 
 	return adjacentCoords
 }
@@ -42,7 +42,7 @@ func removeFromOpenList(removalNode Node, openList []Node) []Node {
 	return newOpenList
 }
 
-func appendList(appendingNode Node, Snakes []api.Snake, List []Node, BoardHeight int, BoardWidth int) []Node {
+func appendList(appendingNode Node, Snakes []Snake, List []Node, BoardHeight int, BoardWidth int) []Node {
 	if NodeBlocked(appendingNode.Coord, Snakes) == false && OnBoard(appendingNode.Coord, BoardHeight, BoardWidth) {
 		List = append(List, appendingNode)
 	}
@@ -51,7 +51,7 @@ func appendList(appendingNode Node, Snakes []api.Snake, List []Node, BoardHeight
 }
 
 // reverseCoords reverses the path of coordinates so it's in chronological order
-func reverseCoords(path []api.Coord) []api.Coord {
+func reverseCoords(path []Coord) []Coord {
 	for a := 0; a < len(path)/2; a++ {
 		b := len(path) - a - 1
 		path[a], path[b] = path[b], path[a]
@@ -59,12 +59,12 @@ func reverseCoords(path []api.Coord) []api.Coord {
 	return path
 }
 
-func Astar(BoardHeight int, BoardWidth int, MySnake api.Snake, Snakes []api.Snake, Destination api.Coord) []api.Coord {
-	closedList := make(map[api.Coord]bool)
+func Astar(BoardHeight int, BoardWidth int, me Snake, Snakes []Snake, target Coord) []Coord {
+	closedList := make(map[Coord]bool)
 	openList := make([]Node, 0)
-	pathTracker := make(map[api.Coord]api.Coord)
+	pathTracker := make(map[Coord]Coord)
 
-	myHead := Node{Coord: MySnake.Body[0], G: 0, H: 0, F: 0}
+	myHead := Node{Coord: me.Body[0], G: 0, H: 0, F: 0}
 	openList = append(openList, myHead)
 
 	for len(openList) > 0 {
@@ -90,12 +90,12 @@ func Astar(BoardHeight int, BoardWidth int, MySnake api.Snake, Snakes []api.Snak
 				continue
 			}
 
-			if neighbour == Destination {
+			if neighbour == target {
 
 				closedList[neighbour] = true
 
-				path := make([]api.Coord, 0)
-				path = append(path, Destination)
+				path := make([]Coord, 0)
+				path = append(path, target)
 				path = append(path, neighbour)
 				current := closeNode.Coord
 				path = append(path, current)
@@ -114,10 +114,10 @@ func Astar(BoardHeight int, BoardWidth int, MySnake api.Snake, Snakes []api.Snak
 			for _, item := range openList {
 				if neighbour == item.Coord {
 					if NodeBlocked(neighbour, Snakes) == false && OnBoard(neighbour, BoardHeight, BoardWidth) {
-						if (closeNode.G+1)+Dist(neighbour, Destination) < item.F {
-							item.F = (closeNode.G + 1) + Dist(neighbour, Destination)
+						if (closeNode.G+1)+Dist(neighbour, target) < item.F {
+							item.F = (closeNode.G + 1) + Dist(neighbour, target)
 							item.G = closeNode.G + 1
-							item.H = Dist(neighbour, Destination)
+							item.H = Dist(neighbour, target)
 							item.ParentCoords = neighbour
 
 							pathTracker[item.Coord] = closeNode.Coord
@@ -129,8 +129,8 @@ func Astar(BoardHeight int, BoardWidth int, MySnake api.Snake, Snakes []api.Snak
 			var openNode = Node{
 				Coord:        neighbour,
 				G:            closeNode.G + 1,
-				H:            Dist(neighbour, Destination),
-				F:            (closeNode.G + 1) + (Dist(neighbour, Destination)),
+				H:            Dist(neighbour, target),
+				F:            (closeNode.G + 1) + (Dist(neighbour, target)),
 				ParentCoords: closeNode.Coord,
 			}
 
@@ -145,23 +145,41 @@ func Astar(BoardHeight int, BoardWidth int, MySnake api.Snake, Snakes []api.Snak
 
 
 // ChaseTail returns the coordinate of the position behind my tail
-func ChaseTail(You []api.Coord) api.Coord {
+func ChaseTail(You []Coord) Coord {
 	return You[len(You)-1]
 }
 
 // abs is build in math.abs
-
-// Dist distance
-func Dist(pointA api.Coord, pointB api.Coord) int {
-	var DistX = Abs(pointB.X - pointA.X)
-	var DistY = Abs(pointB.Y - pointA.Y)
-	var DistDistance = DistX + DistY
-	return DistDistance
+/* Dist to function in steps (int) */
+func Dist(a Coord, b Coord) int {
+	return int(math.Abs(float64(b.X-a.X)) + math.Abs(float64(b.Y-a.Y)))
 }
+
+/*
+func GetBodies(snakes SnakesList) []Coord {
+  list := make([]Coord, 0)
+  for _, s := range snakes {
+    list = append(list, s.Body...)
+  }
+  return list
+}
+*/
+// closestFoodPoint
+func minDistFood(headPos Coord, food []Coord) Coord {
+	min := food[0]
+	for _, f := range food {
+		if Dist(min, headPos) < Dist(f, headPos) {
+			min = f
+		}
+	}
+	return min
+}
+
+
 
 // determines if the square is actually on the board
 // copy ownfunction
-func OnBoard(square api.Coord, boardHeight int, boardWidth int) bool {
+func OnBoard(square Coord, boardHeight int, boardWidth int) bool {
 	if square.X >= 0 && square.X < boardWidth && square.Y >= 0 && square.Y < boardHeight {
 		return true
 	}
@@ -169,13 +187,14 @@ func OnBoard(square api.Coord, boardHeight int, boardWidth int) bool {
 	return false
 }
 
+
 // determines if the square is blocked by a snake
-func SquareBlocked(point api.Coord, Snakes []api.Snake) bool {
+func NodeBlocked(point Coord, Snakes []Snake) bool {
 	for i := 0; i < len(Snakes); i++ {
 		for j := 0; j < len(Snakes[i].Body); j++ {
 			if Snakes[i].Body[j].X == point.X && Snakes[i].Body[j].Y == point.Y {
 				if len(Snakes[i].Body)-1 == j {
-					return false
+					return true
 				}
 
 				return true
@@ -186,8 +205,23 @@ func SquareBlocked(point api.Coord, Snakes []api.Snake) bool {
 	return false
 }
 
+/* move from coord to coord -> returns MOVE */
+func goToDir(curr Coord, next Coord) string {
+	dir := ""
+	if curr.X < next.X {
+		dir = "right"
+	} else if curr.X > next.X {
+		dir = "left"
+	} else if curr.Y < next.Y {
+		dir = "down"
+	} else if curr.Y > next.Y {
+		dir = "up"
+	}
+	return dir
+}
+
 // Heading determines the direction between two points - must be side by side
-func Heading(startingPoint api.Coord, headingPoint api.Coord) string {
+func Heading(startingPoint Coord, headingPoint Coord) string {
 	if headingPoint.X > startingPoint.X {
 		return "right"
 	}
@@ -205,7 +239,7 @@ func Heading(startingPoint api.Coord, headingPoint api.Coord) string {
 }
 
 // NearestFood finds the closest food to the head of my snake
-func NearestFood(FoodCoords []api.Coord, You api.Coord) api.Coord {
+func NearestFood(FoodCoords []Coord, You Coord) Coord {
 	var nearestFood = FoodCoords[0]
 	var nearestFoodF = Dist(FoodCoords[0], You)
 
