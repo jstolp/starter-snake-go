@@ -4,8 +4,8 @@ import (
   "log"
   "encoding/json"
   "net/http"
-  . "github.com/jstolp/pofadder-go/api" // Heroku wants this
-//. "./api" // local wants this
+  //. "github.com/jstolp/pofadder-go/api" // Heroku wants this
+   . "./api" // local wants this
   "github.com/tkanos/gonfig"
 // . "github.com/maximelamure/algorithms/datastructure" // BFS
   "github.com/nickdavies/go-astar/astar"
@@ -51,14 +51,8 @@ func Start(res http.ResponseWriter, req *http.Request) {
   topBound, leftBound = 1, 1; // Set NW bound, X, Y
   botBound, rightBound = decoded.Board.Height, decoded.Board.Width // SE corner X, Y
 
-  //edgeSnakeLimit = (((botBound - 1) * 2) + ((rightBound - 1) * 2))
 
-  log.Print("BOARD Size: TOP LEFT  NW Corner x:" + strconv.Itoa(topBound) + " , " + strconv.Itoa(leftBound))
-  log.Print("BOARD Size: BOT RIGHT SE Corner x:" + strconv.Itoa(botBound) + "," + strconv.Itoa(rightBound))
-//  log.Println("Snake Edge Limit: " + strconv.Itoa(edgeSnakeLimit))
   log.Print("Enemy Snakes: " + strconv.Itoa(numOfStartingSnakes - 1) + "\n\n")
-
-  log.Print("Start Pos: " + strconv.Itoa(headPos.X) + "," + strconv.Itoa(headPos.Y))
   if(numOfStartingSnakes == 1) {
     log.Print("\n\n It's Gonna be a SOLO GAME \n")
   }
@@ -67,10 +61,9 @@ func Start(res http.ResponseWriter, req *http.Request) {
   /*
    e19c41 - orange test 2
    00ff55 - green
-   ff4f00 - orange test 1 -nee te rood
   */
   respond(res, StartResponse{
-    Color: "#e19c41",
+    Color: "#ff00aa",
     HeadType: "tongue",
     TailType: "curled",
   })
@@ -83,7 +76,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
   if err != nil {
     log.Printf("Bad move request: %v", err)
   }
-
+  
   me = decoded.You
   headPos = getHeadPos(me)
   foodPointList = decoded.Board.Food
@@ -92,11 +85,11 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
   rows, cols := decoded.Board.Height, decoded.Board.Width
   // Build a new AStar object from Height x Width
-  astarBoard := astar.NewAStar(rows + 1, cols + 1)
-
+  astarBoard := astar.NewAStar(rows, cols)
+  p2p := astar.NewPointToPoint()
   grid := mapToGrid(astarBoard, decoded, rows)
 
-  PrintGrid(grid);
+  
 
 
   health = me.Health
@@ -104,43 +97,38 @@ func Move(res http.ResponseWriter, req *http.Request) {
   numSnakesLeft = len(decoded.Board.Snakes)
   enemySnakes = numSnakesLeft - 1
   turn = decoded.Turn
-  if (99 < health) {
-  //  fmt.Print("I JUST ATE FOOOOOOD \n\n")
-    // i just ate. reset foodPoint
-  }
-  // IF at 0,0 I'm in the TOP-left corner
-//  if (headPos.X == 0 && headPos.Y == 0) {
-    //log.Printf("I'm in the TOP-LEFT NW CORNER AT TURN %d", turn)
-//  }
 
-//  if (headPos.X == rightBound - 1 && headPos.Y == botBound - 1) {
-    //log.Printf("I'm in the BOT-RIGHT SE CORNER AT TURN %d", turn)
-//  }
+    if(len(foodPointList) > 0) {
+		closestFoodPoint := minDistFood(headPos,foodPointList)
+		source := make([]astar.Point, 1)
+		source[0].Row = headPos.Y
+		source[0].Col = headPos.X
+		
+		target := make([]astar.Point, 1)
+	    target[0].Row = closestFoodPoint.Y
+		target[0].Col = closestFoodPoint.X
+		path := astarBoard.FindPath(p2p, source, target)
+	    for path != nil {
+			path = path.Parent
+			log.Printf("TRGT At (%d, %d)\n", path.Col, path.Row)
+			log.Printf("HEAD At (%d, %d)\n", headPos.X, headPos.Y)
+			// target coord: 
+			targetCoord := Coord{path.Col, path.Row}
+			nextMove = goToDir(headPos, targetCoord)
+			log.Print("next move is: " + move)
+			
+		}
+		//DrawPath(grid, path, "$")
+		PrintGrid(grid);
+	}
 
-/*
-  if (me.Body[0].X == 0 && me.Body[0].Y == 0 && myLength == edgeSnakeLimit) {
-    log.Print("IM TOP LEFT... \n\n")
-    shrinkArena()
-  } else {
-    dd(me.Body[0])
-  }
-*/
-
-  if (enemySnakes < 1) {
-    // SOLO MODE!
-    } else {
-      // BATTLE  MODE
-    //
-  }
-
-log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
+//log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: "+ strconv.Itoa(health) + "\n")
 
 
     validMoves := validMoveCoordinates(headPos, nextMove, me.Body)
 
-    //closestFoodPoint := minDistFood(headPos,foodPointList)
+    //
     // if there is a direct path to the food... Go for it!
-  if(len(foodPointList) > 0) {
 
     if (health < 40) {
         //closestFoodPoint := minDistFood(headPos,foodPointList)
@@ -182,85 +170,19 @@ log.Print("TURN " + strconv.Itoa(turn) + " e: "+ strconv.Itoa(enemySnakes)+" h: 
             }
         //fmt.Print("im gooing to " + foodDir + "seems to be a good idea...")
 
-      } else {
-        // NOT hungry...
-
-                // i'm HealTHY!!! :D
-                nextMoveIsOOB := isMoveOOB(headPos, nextMove)
-              if (nextMoveIsOOB) {
-                // CLOCKWISE: invDir(randomNOOBmove(headPos, move))
-                nextMove = randomNOOBmove(headPos, move)
-                // COUNTER-CLOCKWISE: randomNOOBmove(headPos, move)
-
-
-              }
-
-                } // end if health < 60
-    }  else {
-    log.Print("THERE IS NO FOOD \n\n")
-  }
-
-//  nextMoveIsOOB := isMoveOOB(headPos, nextMove)
-//  if (nextMoveIsOOB) {
-    // CLOCKWISE: invDir(randomNOOBmove(headPos, move))
-//    nextMove = randomNOOBmove(headPos, move)
-    // COUNTER-CLOCKWISE: randomNOOBmove(headPos, move)
-
-
-  //}
-
-
-    // TEST THE NEXT MOVE.. IF FATAL.. select random otherMove:
-
-  // test := isNextMoveFatal(me, prevMove, nextMove)
+      } // no health
+    
   move = nextMove // finalise the move
   fmt.Print(strconv.Itoa(turn) + ": Move " + move)
-  //fmt.Print(test)
-  //fmt.Println()
+  log.Print("Move: " + move)
+  
   respond(res, MoveResponse{
     Move: move,
   })
   prevMove = move // Re-allocate move command to prev/last move\
 } // END MOVE COMMAND
 
-/*
-//python bfs
 
-frontier = Queue()
-frontier.put(start )
-visited = {}
-visited[start] = True
-
-while not frontier.empty():
-   current = frontier.get()
-   for next in graph.neighbors(current):
-      if next not in visited:
-         frontier.put(next)
-         visited[next] = True
-   */
-/*
-   type BFSPath struct {
-     Source int
-     DistTo map[int]int
-     EdgeTo map[int]int
-     Path   Queue
-     G      *Graph
-   }
-
-   func NewBFSPath(g *Graph, source int) *BFSPath {
-     bfsPath := &BFSPath{
-       DistTo: make(map[int]int),
-       EdgeTo: make(map[int]int),
-       G:      g,
-       Path:   NewQueueLinkedList(),
-       Source: source,
-     }
-     bfsPath.bfs(source)
-     return bfsPath
-   }
-*/
-
-// safe is: NO wall, NO ownBody, (No Enemies) and harderst.. not getting stuck
 func isSafeCoordinate(targetcoord Coord, myBodyPoints CoordList) bool {
     validCoords := CoordList {
             Coord{targetcoord.X - 1, targetcoord.Y},
@@ -291,6 +213,7 @@ returns grid,
 */
 func mapToGrid(ast astar.AStar, decoded SnakeRequest, grid_size int) ([][]string) {
 
+  
   grid := make([][]string, grid_size)
   me := decoded.You
   foodList := decoded.Board.Food
@@ -300,35 +223,35 @@ func mapToGrid(ast astar.AStar, decoded SnakeRequest, grid_size int) ([][]string
   }
 
   for i := 0; i < grid_size; i++ {
-     grid[0][i] = "#"
-     ast.FillTile(astar.Point{0, i}, -1)
+     grid[0][i] = "."
+     //ast.FillTile(astar.Point{0, i}, -1)
 
-     grid[i][0] = "#"
-     ast.FillTile(astar.Point{i, 0}, -1)
+     grid[i][0] = "."
+     //ast.FillTile(astar.Point{i, 0}, -1)
 
-     grid[grid_size-1][i] = "#"
-     ast.FillTile(astar.Point{grid_size - 1, i}, -1)
+     grid[grid_size-1][i] = "."
+     //ast.FillTile(astar.Point{grid_size - 1, i}, -1)
 
-     grid[i][grid_size-1] = "#"
-     ast.FillTile(astar.Point{i, grid_size - 1}, -1)
+     grid[i][grid_size-1] = "."
+     //ast.FillTile(astar.Point{i, grid_size - 1}, -1)
  }
 
 otherSnakes := decoded.Board.Snakes
 
 for _, snake := range otherSnakes {
   for i, coord := range snake.Body {
-    x := coord.X
-    y := coord.Y
+    c := coord.X
+    r := coord.Y
 
-    if grid[x][y] != "#" {
+    if grid[r][c] != "#" {
       if(i == 0) {
-        grid[x][y] = "h"
-        ast.FillTile(astar.Point{x, y}, -1) // not traversable
+        grid[r][c] = "h"
+        ast.FillTile(astar.Point{r, c}, -1) // not traversable
       } else if(i == len(snake.Body) - 1) {
-        grid[x][y] = "t"
+        grid[r][c] = "t"
       } else {
-        ast.FillTile(astar.Point{x, y}, -1) // not traversable
-        grid[x][y] = "+"
+        ast.FillTile(astar.Point{r, c}, -1) // not traversable
+        grid[r][c] = "+"
       }
      }
   }
@@ -348,11 +271,11 @@ for _, snake := range otherSnakes {
 //if (len(foodList) > 0) {
   // there is food on the board.
   for _, coord := range foodList {
-     x := coord.X
-     y := coord.Y
+     c := coord.X
+     r := coord.Y
 
-     if grid[x][y] != "#" {
-        grid[x][y] = "!"
+     if grid[r][c] != "#" {
+        grid[r][c] = "!"
       }
   }
 //}
@@ -361,28 +284,28 @@ for _, snake := range otherSnakes {
 
  myBody := me.Body;
  for _, coord := range myBody {
-    x := coord.X
-    y := coord.Y
+    c := coord.X
+    r := coord.Y
 
-    ast.FillTile(astar.Point{x, y}, -1)
-    if (grid[x][y] != "#") {
-       grid[x][y] = "*"
+    ast.FillTile(astar.Point{r, c}, -1)
+    if (grid[r][c] != "#") {
+       grid[r][c] = "*"
      }
  }
 
  headPos := getHeadPos(me)
 
- headX := headPos.X
- headY := headPos.Y
+ c := headPos.X
+ r := headPos.Y
 
- if grid[headX][headY] != "#" {
-    grid[headX][headY] = "H"
+ if grid[r][c] != "#" {
+    grid[r][c] = "H"
   }
 
   tailPos := getTailPos(me)
 
-  r := tailPos.X
-  c := tailPos.Y
+  c = tailPos.X
+  r = tailPos.Y
 
   ast.ClearTile(astar.Point{r, c}) // clear tail tile
   if grid[r][c] != "#" {
@@ -474,66 +397,7 @@ func IsPosInCoordList(target Coord, coordList CoordList) bool {
     return 0 >= idx(target, coordList) // true if index is found (-1 for not found, 0== found at first value)
 }
 
-/* func bodyCoords() CoordList {
-  myBody := make(CoordList, 0) // empty CoordList
-    for _, me := range myBody {
-        myBody = append(list, me.Body...) // extract MyBody
-    }
-    return myBody
-} /*
 
-
-// BFS implementation
-/*
-func bfs(items []Coord) : Coord {
-  pq := make(PriorityQueue, len(items))
-  visited := []Coord
-
-  i := 0
-  for value, priority := range items {
-      pq[i] = &Item{
-          value:    value,
-          priority: priority,
-          index:    i,
-      }
-      i++
-  }
-  heap.Init(&pq)
-//  heap.Push(&pq, item)
-//  frontier :=
-}
-*/
-
-/*
-func (b *BFSPath) bfs(v int) {
-  queue := NewQueueLinkedList()
-  b.DistTo[v] = 0
-  queue.Enqueue(v)
-  for {
-    if queue.IsEmpty() {
-      break
-    }
-    d := queue.Dequeue().(int)
-    b.Path.Enqueue(d)
-    for r := range b.G.Adj(d) {
-      if _, ok := b.DistTo[r]; !ok {
-        queue.Enqueue(r)
-        b.EdgeTo[r] = d
-        b.DistTo[r] = 1 + b.DistTo[d]
-      }
-    }
-  }
-}
-*/
-
-//func getFatalHeadPos(headPos Coord, string direction) Coord {
-
-
-    //return fatalMove
-//}
-
-// Check if MoveIs Out of Bounds...
-// What a horror function.... v0.2.0 consider refactor
 func isMoveOOB(headPos Coord, direction string) bool {
 //    fmt.Print("\n my head is... and im going -> " + direction)
 //    dd(headPos)
@@ -614,20 +478,6 @@ func randomNOOBmove(headPos Coord, currentDir string) string {
         return "up"
   }
   return "down"
-}
-
-func shrinkArena() {
-  leftBound = leftBound + 1
-  topBound = topBound + 1
-  rightBound = rightBound - 1
-  botBound = botBound - 1
-  // edgeSnakeLimit = ((botBound - 1) * (rightBound - 1)) - FALSE ASSUMPTION. it doesn't work if you shrink, because you are bigger
-
-  log.Print("BOARD Size: TOP LEFT  NW Corner x:" + strconv.Itoa(topBound) + " , " + strconv.Itoa(leftBound))
-  log.Print("BOARD Size: BOT RIGHT SE Corner x:" + strconv.Itoa(botBound) + "," + strconv.Itoa(rightBound))
-  log.Println("Snake Edge Limit: " + strconv.Itoa(edgeSnakeLimit))
-
-  log.Print("Shrunk the Area by 1x1... new SIZES \n")
 }
 
 func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
@@ -737,7 +587,7 @@ func PrintGrid(grid [][]string) {
     for i := 0; i < len(grid); i++ {
         for j := 0; j < len(grid[0]); j++ {
             if grid[i][j] == "" {
-                fmt.Printf(" ")
+                fmt.Printf(".")
             } else {
                 fmt.Print(grid[i][j])
             }
