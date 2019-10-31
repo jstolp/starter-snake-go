@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	. "github.com/jstolp/pofadder-go/api"
+	"./astar"
 	"fmt"
 	"math"
 	"strconv"
@@ -36,9 +37,9 @@ func Start(res http.ResponseWriter, req *http.Request) {
 		log.Printf("Bad start request: %v", err)
 	}
 
-  headPos = decoded.You.Body[0]
+	headPos = decoded.You.Body[0]
 	
-		log.Print("Enemy Snakes: " + strconv.Itoa(numOfStartingSnakes - 1) + "\n\n")
+	log.Print("Enemy Snakes: " + strconv.Itoa(numOfStartingSnakes - 1) + "\n\n")
 
 	fmt.Print("Start Pos: " + strconv.Itoa(headPos.X) + "," + strconv.Itoa(headPos.Y))
 	if(numOfStartingSnakes == 1) {
@@ -65,16 +66,19 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		log.Printf("Bad move request: %v", err)
 	}
 
-/*
-	me := decoded.You
-	headPos := getHeadPos(me)
-	foodPointList = decoded.Board.Food
-	health = me.Health
-	myLength := len(me.Body)
-	numSnakesLeft = len(decoded.Board.Snakes)
-	enemySnakes = numSnakesLeft - 1
-	turn = decoded.Turn
-*/
+	var moveCoord []api.Coord
+	// if there is no food chase your tail
+	if decoded.You.Health > 30 && ((len(decoded.You.Body) >= averageSnakeLength && len(decoded.You.Body) >= 5) || len(decoded.Board.Food) == 0) {
+		moveCoord = astar.Astar(decoded.Board.Height, decoded.Board.Width, decoded.You, decoded.Board.Snakes, astar.ChaseTail(decoded.You.Body))
+	} else {
+		moveCoord = astar.Astar(decoded.Board.Height, decoded.Board.Width, decoded.You, decoded.Board.Snakes, astar.NearestFood(decoded.Board.Food, decoded.You.Body[0]))
+		if moveCoord == nil {
+			moveCoord = astar.Astar(decoded.Board.Height, decoded.Board.Width, decoded.You, decoded.Board.Snakes, astar.ChaseTail(decoded.You.Body))
+		}
+	}
+
+	nextMove = astar.Heading(decoded.You.Body[0], moveCoord[1])
+	
 	respond(res, MoveResponse{
 		Move: nextMove,
 	})
