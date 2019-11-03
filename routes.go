@@ -62,7 +62,7 @@ func Start(res http.ResponseWriter, req *http.Request) {
 	*/
 	respond(res, StartResponse{
 		Color: "#e19c41",
-		HeadType: "tongue",
+		HeadType: "sand-worm",
 		TailType: "curled",
 	})
 }
