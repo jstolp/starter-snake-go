@@ -143,6 +143,18 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		Move: nextMove,
 	})
 }
+// Shuffle... For use in find random direction
+
+func shuffle(src []string) []string {
+  final := make([]string, len(src))
+  rand.Seed(time.Now().UTC().UnixNano())
+  perm := rand.Perm(len(src))
+
+  for i, v := range perm {
+ final[v] = src[i]
+  }
+  return final
+ }
 
 // see if i can attach these methods to the struct Snake or something..
 // func (target Snake) Head() Coord { return target.Body[0] }
