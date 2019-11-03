@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	. "github.com/jstolp/pofadder-go/api"
-	. "github.com/jstolp/pofadder-go/astar"
 	"fmt"
 	"math"
 	"strconv"
@@ -88,26 +87,26 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	if (len(decoded.Board.Food) == 0) && len(decoded.You.Body) >= 4 {
 		// no food? chase tail. but only if i'm big enough
 		log.Print("no food on board... chasing tail...")
-		moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
+		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
 	} else if (health > HUNGRY_TRESHOLD) &&  len(decoded.You.Body) >= 4 {
 		// there is food but i'm not hungry, still chase tail only if i'm big enough.
 		log.Print("chasing tail")
-		moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
+		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
 	} else if (health > HUNGRY_TRESHOLD) {
 		log.Print("not big enough... moving to corner")
 		targetCorner := closestCorner(boardHeight, boardWidth, headPos)
-		moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, targetCorner)
+		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, targetCorner)
 		if moveCoord == nil {
-			moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, astar.ChaseTail(me.Body))
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, ChaseTail(me.Body))
 		}
 	} else {
-		moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, astar.NearestFood(foodList, headPos))
+		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, NearestFood(foodList, headPos))
 		if moveCoord == nil {
-			moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, astar.ChaseTail(me.Body))
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, ChaseTail(me.Body))
 		}
 	}
 
-	nextMove = astar.Heading(headPos, moveCoord[1])
+	nextMove = Heading(headPos, moveCoord[1])
 
 	closestCorner(boardHeight, boardWidth, headPos)
 	
@@ -217,35 +216,9 @@ func invDir(currentDir string) string {
 		return dir
 }
 
-/* move from coord to coord -> returns MOVE */
-func goToDir(curr Coord, next Coord) string {
-	dir := ""
-	if curr.X < next.X {
-		dir = "right"
-	} else if curr.X > next.X {
-		dir = "left"
-	} else if curr.Y < next.Y {
-		dir = "down"
-	} else if curr.Y > next.Y {
-		dir = "up"
-	}
-	return dir
-}
-
 /* Dist to function in steps (int) */
 func dist(a Coord, b Coord) int {
 	return int(math.Abs(float64(b.X-a.X)) + math.Abs(float64(b.Y-a.Y)))
-}
-
-// closestFoodPoint
-func minDistFood(headPos Coord, food []Coord) Coord {
-	min := food[0]
-	for _, f := range food {
-		if dist(min, headPos) < dist(f, headPos) {
-			min = f
-		}
-	}
-	return min
 }
 
 // just a testing function to dump a object../

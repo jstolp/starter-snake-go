@@ -1,4 +1,4 @@
-package astar
+package main
 
 import (
 	. "github.com/jstolp/pofadder-go/api"
@@ -164,6 +164,7 @@ func GetBodies(snakes SnakesList) []Coord {
   return list
 }
 */
+
 // closestFoodPoint
 func minDistFood(headPos Coord, food []Coord) Coord {
 	min := food[0]
