@@ -97,6 +97,9 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		log.Print("not big enough... moving to corner")
 		targetCorner := closestCorner(boardHeight, boardWidth, headPos)
 		moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, targetCorner)
+		if moveCoord == nil {
+			moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, astar.ChaseTail(me.Body))
+		}
 	} else {
 		moveCoord = astar.Astar(boardHeight, boardWidth, me, enemySnakes, astar.NearestFood(foodList, headPos))
 		if moveCoord == nil {
