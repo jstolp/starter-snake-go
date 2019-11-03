@@ -165,6 +165,17 @@ func GetBodies(snakes SnakesList) []Coord {
 }
 */
 
+func MaxDistFood(headPos Coord, food []Coord) Coord {
+	max := food[0]
+	for _, f := range food {
+		if Dist(max, headPos) >= Dist(f, headPos) {
+			max = f
+		}
+	}
+	return max
+}
+
+
 // closestFoodPoint
 func minDistFood(headPos Coord, food []Coord) Coord {
 	min := food[0]
@@ -237,6 +248,20 @@ func Heading(startingPoint Coord, headingPoint Coord) string {
 	}
 
 	return "up"
+}
+// NearestFood finds the closest food to the head of my snake
+func FarFood(FoodCoords []Coord, You Coord) Coord {
+	var nearestFood = FoodCoords[0]
+	var nearestFoodF = Dist(FoodCoords[0], You)
+
+	for i := 0; i < len(FoodCoords); i++ {
+		if Dist(FoodCoords[i], You) > nearestFoodF {
+			nearestFood = FoodCoords[i]
+			nearestFoodF = Dist(FoodCoords[i], You)
+		}
+	}
+
+	return nearestFood
 }
 
 // NearestFood finds the closest food to the head of my snake

@@ -85,13 +85,12 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	foodList := decoded.Board.Food
 	
 	if (len(decoded.Board.Food) == 0) && len(decoded.You.Body) >= 4 {
-		// no food? chase tail. but only if i'm big enough
 		log.Print("no food on board... chasing tail...")
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
 	} else if (health > HUNGRY_TRESHOLD) &&  len(decoded.You.Body) >= 4 {
 		// there is food but i'm not hungry, still chase tail only if i'm big enough.
-		log.Print("chasing tail")
-		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
+		log.Print("Not hungry... chasing tail")
+		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, closestCorner(boardHeight, boardWidth, headPos))
 	} else if (health > HUNGRY_TRESHOLD) {
 		log.Print("not big enough... moving to corner")
 		targetCorner := closestCorner(boardHeight, boardWidth, headPos)
@@ -100,12 +99,29 @@ func Move(res http.ResponseWriter, req *http.Request) {
 			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, ChaseTail(me.Body))
 		}
 	} else {
-		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, NearestFood(foodList, headPos))
+		log.Print("Going to FAR food...")
+		
+		if(health < 50) { // almost starving... no detours anymoe go to nearest Food.
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, NearestFood(foodList,headPos))
+		} else {
+			log.Print("Going to CORNER")
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, closestCorner(boardHeight, boardWidth, headPos))
+		}
+		
 		if moveCoord == nil {
+			log.Print("TAIL NearestFood!! FALBACK")
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, NearestFood(foodList, tailPos))
+		}
+		
+		if moveCoord == nil {
+			log.Print("CANT REACH FOOD, chaseTail Fallback")
 			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, ChaseTail(me.Body))
 		}
 	}
 
+	grid := mapToGrid(moveCoord[len(moveCoord) - 1], decoded, boardHeight)
+	PrintGrid(grid)
+	
 	nextMove = Heading(headPos, moveCoord[1])
 
 	closestCorner(boardHeight, boardWidth, headPos)
@@ -180,14 +196,14 @@ func closestCorner(boardHeight int, boardWidth int, headPos Coord) Coord {
 		targetCoord := Coord{0,0}
 		corners := CoordList {
 			Coord{1,1},
-			Coord{boardWidth-1,1},
-			Coord{1, boardHeight - 1},
-			Coord{boardHeight - 1, boardWidth -1},
+			Coord{boardWidth-2,1},
+			Coord{1, boardHeight - 2},
+			Coord{boardHeight - 2, boardWidth -2},
 		}
 
 		for _, coord := range corners {
 			
-			if( dist(headPos, coord) > distToCorner) {
+			if( dist(headPos, coord) >= distToCorner) {
 				distToCorner = dist(headPos, coord)
 				targetCoord = coord
 			}
@@ -241,4 +257,118 @@ func favicon(w http.ResponseWriter, r *http.Request) {
 func End(res http.ResponseWriter, req *http.Request) {
 	log.Print("The game has ended.... \n\n")
 	return
+}
+
+func mapToGrid(target Coord, decoded SnakeRequest, grid_size int) ([][]string) {
+
+  
+  grid := make([][]string, grid_size)
+  me := decoded.You
+  foodList := decoded.Board.Food
+
+  
+  for i := 0; i < len(grid); i++ {
+      grid[i] = make([]string, grid_size)
+  }
+
+  for i := 0; i < grid_size; i++ {
+     grid[0][i] = "."
+
+     grid[i][0] = "."
+
+     grid[grid_size-1][i] = "."
+
+     grid[i][grid_size-1] = "."
+ }
+
+otherSnakes := decoded.Board.Snakes
+
+for _, snake := range otherSnakes {
+  for i, coord := range snake.Body {
+    c := coord.X
+    r := coord.Y
+
+    if grid[r][c] != "#" {
+      if(i == 0) {
+        grid[r][c] = "h"
+      } else if(i == len(snake.Body) - 1) {
+        grid[r][c] = "t"
+      } else {
+        grid[r][c] = "+"
+      }
+     }
+  }
+}
+
+/**
+ * H -> Head
+ * h -> enemy head
+ * T -> Tail
+ * T -> enemy tail
+ * ! -> Food
+ * # -> Wall
+ * * snakeBody
+ * + enemySnake Body
+ * $ - Target
+ */
+//if (len(foodList) > 0) {
+  // there is food on the board.
+  for _, coord := range foodList {
+     c := coord.X
+     r := coord.Y
+
+     if grid[r][c] != "#" {
+        grid[r][c] = "!"
+      }
+  }
+//}
+
+// set target to grid
+  grid[target.Y][target.X] = "$"
+  
+
+
+ myBody := me.Body;
+ for _, coord := range myBody {
+    c := coord.X
+    r := coord.Y
+
+    if (grid[r][c] != "#") {
+       grid[r][c] = "*"
+     }
+ }
+
+ headPos := getHeadPos(me)
+
+ c := headPos.X
+ r := headPos.Y
+
+ if grid[r][c] != "#" {
+    grid[r][c] = "H"
+  }
+
+  tailPos := getTailPos(me)
+
+  c = tailPos.X
+  r = tailPos.Y
+
+  if grid[r][c] != "#" {
+     grid[r][c] = "T"
+   }
+
+ return grid;
+}
+
+func PrintGrid(grid [][]string) {
+    for i := 0; i < len(grid); i++ {
+        for j := 0; j < len(grid[0]); j++ {
+            if grid[i][j] == "" {
+                fmt.Printf(".")
+            } else {
+                fmt.Print(grid[i][j])
+            }
+        }
+        fmt.Print("\n")
+    }
+    fmt.Print("\n")
 }
