@@ -242,5 +242,5 @@ func End(res http.ResponseWriter, req *http.Request) {
 
 func Index(res http.ResponseWriter, req *http.Request) {
   res.WriteHeader(http.StatusOK)
-  res.Write([]byte("Jay's battleSnake...))
+  res.Write([]byte("Jay's battleSnake..."))
 }
