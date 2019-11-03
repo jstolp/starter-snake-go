@@ -6,11 +6,14 @@ import (
 )
 
 /*
-     ripped from alecj1240/alec-snake, astar
+	TODO: 
+	- Rename Node to Vertex
+	- Implement Hamilton Path
+	
+	
 	G - the amount of steps its taken to get to that Node
 	H - the heuristic - estimation from this Node to the target
 	F - the sum of G and H
-	ParentCoords - the coordinates of the previous step (Node)
 */
 
 // Node holds: coordinates, G, H, F, parent coords

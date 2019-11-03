@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+	http.HandleFunc("/", Index)
 	http.HandleFunc("/start", Start)
 	http.HandleFunc("/move", Move)
 	http.HandleFunc("/end", End)

@@ -32,9 +32,6 @@ var boardWidth int = 0;
 var HUNGRY_TRESHOLD  int = 90; // defines when snake goes looking for food.
 
 
-/* heads: "beluga" "bendr" "dead" "evil" "fang" "pixel" "regular" "safe" "sand-worm" "shades" "silly" "smile" "tongue"
-tails: "block-bum" "bolt" "curled" "fat-rattle" "freckled" "hook" "pixel" "regular" "round-bum" "sharp" "skinny" "small-rattle" */
-
 func Start(res http.ResponseWriter, req *http.Request) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 	decoded := SnakeRequest{}
@@ -241,4 +238,9 @@ func favicon(w http.ResponseWriter, r *http.Request) {
 func End(res http.ResponseWriter, req *http.Request) {
 	log.Print("The game has ended.... \n\n")
 	return
+}
+
+func Index(res http.ResponseWriter, req *http.Request) {
+  res.WriteHeader(http.StatusOK)
+  res.Write([]byte("Jay's battleSnake...))
 }
