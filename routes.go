@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	. "github.com/jstolp/pofadder-go/api"
-	. "github.com/jstolp/pofadder-go/astar"
+	. "astar"
 	"fmt"
 	"math"
 	"strconv"
