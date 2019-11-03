@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/", Index)
 	http.HandleFunc("/start", Start)
 	http.HandleFunc("/move", Move)
 	http.HandleFunc("/end", End)
@@ -24,6 +23,6 @@ func main() {
 	// Add filename into logging messages, and MICO SECS
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 
-	log.Printf("Running jSnake Server on port %s...\n copy&paste http://localhost:%s", port, port)
+	log.Printf("Running on port %s...\n http://localhost:%s", port, port)
 	http.ListenAndServe(":"+port, LoggingHandler(http.DefaultServeMux))
 }
