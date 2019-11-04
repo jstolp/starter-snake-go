@@ -85,34 +85,34 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	tailPos = getTailPos(me)
 	enemySnakes := decoded.Board.Snakes
 	foodList := decoded.Board.Food
+
+
 	if (len(decoded.Board.Food) == 0) && len(decoded.You.Body) >= 4 {
-		// no food? chase tail. but only if i'm big enough
+		// NO FOOD... Bigger than 4 BodyParts,  No food on the board
 		log.Print("no food on board... chasing tail...")
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
-	} else if (health > HUNGRY_TRESHOLD) &&  len(decoded.You.Body) >= 4 {
-		// there is food but i'm not hungry, still chase tail only if i'm big enough.
-		log.Print("chasing tail")
+	} else if (health > HUNGRY_TRESHOLD ) &&  len(decoded.You.Body) >= 4 {
+		// THERE IS FOOD, Not HUNGRY_TRESHOLD
+		// Long En
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
-	} else if (health > HUNGRY_TRESHOLD) {
-		log.Print("not big enough... moving to corner")
-		targetCorner := closestCorner(boardHeight, boardWidth, headPos)
-		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, targetCorner)
-		if moveCoord == nil {
-			log.Print("targetCornerUnreachable...")
-			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, getTailPos(me))
-		}
 	} else {
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, NearestFood(foodList, headPos))
+		if (dist(headPos, tailPos) == 1) {
+			log.Print("Grabbing Food Close to TAIL!")
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, NearestFood(foodList, tailPos))
+		}
+
+
 		if moveCoord == nil {
-			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, getTailPos(me))
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
 		}
 	}
 
-	if(health > 99) {
+	if (health > 98) {
 		targetCorner := closestCorner(boardHeight, boardWidth, headPos)
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, targetCorner)
 		if moveCoord == nil {
-			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, getTailPos(me))
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
 		}
 	}
 
@@ -139,9 +139,11 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
 	// Check if we still have a path to tail... if not.... let's switch tactics:
 	if (nil == Astar(boardHeight, boardWidth, me, enemySnakes, getTailPos(me))) {
-		log.Print("Switch Tactic to LONGEST PATH!!!!")
+		//log.Print("Switch Tactic to LONGEST PATH!!!!")
 		//dd(decoded)
 	}
+
+
 	//dd(decoded)
 
 	fmt.Print("T " + strconv.Itoa(turn) + " Health:" + strconv.Itoa(health) + " Move: " + nextMove + "\n")
