@@ -7,6 +7,8 @@ import (
 	. "github.com/jstolp/pofadder-go/api"
 	"fmt"
 	"math"
+	"math/rand"
+	"time"
 	"strconv"
 )
 
@@ -45,12 +47,12 @@ func Start(res http.ResponseWriter, req *http.Request) {
 
 	headPos = decoded.You.Body[0]
 	boardHeight, boardWidth = decoded.Board.Height, decoded.Board.Width // SE corner X, Y
-	
+
 	log.Print("Enemy Snakes: " + strconv.Itoa(numOfStartingSnakes - 1) + "\n\n")
 
 	fmt.Print("Start Pos: " + strconv.Itoa(headPos.X) + "," + strconv.Itoa(headPos.Y))
-	
-	
+
+
 	if(numOfStartingSnakes == 1) {
 		log.Print("\n\n It's Gonna be a SOLO GAME \n")
 	}
@@ -83,7 +85,6 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	tailPos = getTailPos(me)
 	enemySnakes := decoded.Board.Snakes
 	foodList := decoded.Board.Food
-	
 	if (len(decoded.Board.Food) == 0) && len(decoded.You.Body) >= 4 {
 		// no food? chase tail. but only if i'm big enough
 		log.Print("no food on board... chasing tail...")
@@ -97,47 +98,52 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		targetCorner := closestCorner(boardHeight, boardWidth, headPos)
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, targetCorner)
 		if moveCoord == nil {
-			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, ChaseTail(me.Body))
+			log.Print("targetCornerUnreachable...")
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, getTailPos(me))
 		}
 	} else {
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, NearestFood(foodList, headPos))
 		if moveCoord == nil {
-			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, ChaseTail(me.Body))
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, getTailPos(me))
 		}
 	}
 
 	if(health > 99) {
-		log.Print("*** ATE-ATE-ATE-ATE-ATE ***")
 		targetCorner := closestCorner(boardHeight, boardWidth, headPos)
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, targetCorner)
 		if moveCoord == nil {
-			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, ChaseTail(me.Body))
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, getTailPos(me))
 		}
 	}
-	
+
 	if(len(moveCoord) < 1) {
-		log.Print("Panic expected??? -- so let's go in the same dir..." + prevMove)
-		nextMove = prevMove
-		grid := mapToGrid(tailPos, decoded, boardHeight)
-		PrintGrid(grid)
-		dd(decoded)
+		nextMove = getRandomValidMove(decoded)
+		log.Print("Used random valid Move: " + nextMove)
 	} else {
 		nextMove = Heading(headPos, moveCoord[1])
 	}
-	
 
 	if(isMoveOOB(headPos, nextMove)) {
 		log.Print("NEXT move is OOB detection + next:Move" + nextMove)
-		grid := mapToGrid(moveCoord[len(moveCoord) - 1], decoded, boardHeight)
-		PrintGrid(grid)
-		//dd(decoded)
-		dd(decoded)
 	}
-	
 
-		
-	closestCorner(boardHeight, boardWidth, headPos)
-	
+	if (health > 99 && dist(headPos, tailPos) == 1 && nextMove == goToDir(headPos, tailPos)) {
+		// select a different move, as i'm heading For my Own Tail...
+		nextMove = getRandomValidMove(decoded)
+		//dd(decoded)
+	}
+
+	if (nextMove == "invalid") {
+		log.Print("Turn "+ strconv.Itoa(turn) + " is my last... Dag mooie wereld!")
+	}
+
+	// Check if we still have a path to tail... if not.... let's switch tactics:
+	if (nil == Astar(boardHeight, boardWidth, me, enemySnakes, getTailPos(me))) {
+		log.Print("Switch Tactic to LONGEST PATH!!!!")
+		//dd(decoded)
+	}
+	//dd(decoded)
+
 	fmt.Print("T " + strconv.Itoa(turn) + " Health:" + strconv.Itoa(health) + " Move: " + nextMove + "\n")
 	respond(res, MoveResponse{
 		Move: nextMove,
@@ -181,6 +187,29 @@ func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
 		return false
 }
 
+func getRandomValidMove(game SnakeRequest) string {
+	headPos := game.You.Body[0]
+	//tailPos := getTailPos(game.You)
+	enemySnakes := game.Board.Snakes
+	allCoords := SurroundingCoordinates(headPos)
+	for _,coord := range allCoords {
+		if (false == NodeBlocked(coord, enemySnakes)) {
+			dir := Heading(headPos, coord)
+			if(game.You.Health > 99 && dist(headPos, tailPos) == 1 && dir == goToDir(headPos, tailPos)) {
+				log.Print("skipping " + dir + " as it would crash into tail")
+				continue
+			}
+			if (false == isMoveOOB(headPos, dir)) {
+				return dir
+			}
+		}
+	}
+
+	log.Print("INVALID MOVE IN: getRandomValidMove")
+ 	return "invalid" // invalid move
+}
+
+
 func isMoveOOB(headPos Coord, direction string) bool {
 	switch direction {
 		case "down":
@@ -210,11 +239,12 @@ func closestCorner(boardHeight int, boardWidth int, headPos Coord) Coord {
 			Coord{1,1},
 			Coord{boardWidth-2,1},
 			Coord{1, boardHeight - 2},
+
 			Coord{boardHeight - 2, boardWidth -1},
 		}
 
 		for _, coord := range corners {
-			
+
 			if( dist(headPos, coord) > distToCorner) {
 				distToCorner = dist(headPos, coord)
 				targetCoord = coord
@@ -223,7 +253,29 @@ func closestCorner(boardHeight int, boardWidth int, headPos Coord) Coord {
 
 
 		//log.Print("closestCord is: " + strconv.Itoa(targetCoord.X) + "," + strconv.Itoa(targetCoord.Y))
-		return targetCoord	
+		return targetCoord
+}
+
+// Shuffle... For use in find random direction
+
+func shuffle(src []string) []string {
+  final := make([]string, len(src))
+  rand.Seed(time.Now().UTC().UnixNano())
+  perm := rand.Perm(len(src))
+
+  for i, v := range perm {
+ final[v] = src[i]
+  }
+  return final
+ }
+
+func SurroundingCoordinates(search Coord) []Coord {
+	return []Coord{
+		{search.X + 1, search.Y + 0},
+		{search.X - 1, search.Y + 0},
+		{search.X + 0, search.Y + 1},
+		{search.X + 0, search.Y - 1},
+	}
 }
 
 /* Inverses direction */
@@ -271,14 +323,14 @@ func End(res http.ResponseWriter, req *http.Request) {
 	return
 }
 
-func mapToGrid(target Coord, decoded SnakeRequest, grid_size int) ([][]string) {
+func mapToGrid(decoded SnakeRequest, grid_size int) ([][]string) {
 
-  
+
   grid := make([][]string, grid_size)
   me := decoded.You
   foodList := decoded.Board.Food
 
-  
+
   for i := 0; i < len(grid); i++ {
       grid[i] = make([]string, grid_size)
   }
@@ -323,8 +375,6 @@ for _, snake := range otherSnakes {
  * + enemySnake Body
  * $ - Target
  */
-//if (len(foodList) > 0) {
-  // there is food on the board.
   for _, coord := range foodList {
      c := coord.X
      r := coord.Y
@@ -333,12 +383,6 @@ for _, snake := range otherSnakes {
         grid[r][c] = "!"
       }
   }
-//}
-
-// set target to grid
-  grid[target.Y][target.X] = "$"
-  
-
 
  myBody := me.Body;
  for _, coord := range myBody {

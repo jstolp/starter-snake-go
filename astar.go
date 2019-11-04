@@ -144,11 +144,6 @@ func Astar(BoardHeight int, BoardWidth int, me Snake, Snakes []Snake, target Coo
 }
 
 
-// ChaseTail returns the coordinate of the position behind my tail
-func ChaseTail(You []Coord) Coord {
-	return You[len(You)-1]
-}
-
 // abs is build in math.abs
 /* Dist to function in steps (int) */
 func Dist(a Coord, b Coord) int {
@@ -178,10 +173,10 @@ func minDistFood(headPos Coord, food []Coord) Coord {
 
 
 
-// determines if the square is actually on the board
+// determines if the vertex is actually on the board
 // copy ownfunction
-func OnBoard(square Coord, boardHeight int, boardWidth int) bool {
-	if square.X >= 0 && square.X < boardWidth && square.Y >= 0 && square.Y < boardHeight {
+func OnBoard(vertex Coord, boardHeight int, boardWidth int) bool {
+	if vertex.X >= 0 && vertex.X < boardWidth && vertex.Y >= 0 && vertex.Y < boardHeight {
 		return true
 	}
 
@@ -189,7 +184,7 @@ func OnBoard(square Coord, boardHeight int, boardWidth int) bool {
 }
 
 
-// determines if the square is blocked by a snake
+// determines if the vertex is blocked
 func NodeBlocked(point Coord, Snakes []Snake) bool {
 	for i := 0; i < len(Snakes); i++ {
 		for j := 0; j < len(Snakes[i].Body); j++ {
