@@ -34,7 +34,7 @@ func TestOnlyCorrectMoveIsUp(t *testing.T) {
     }
 
     // only valid move is up (else in 3 moves we'll fail...
-    expected := `{"move": "up"}`
+    expected := `{"move":"up"}`
     if rr.Body.String() != expected {
         t.Errorf("handler returned unexpected body: got %v expected %v",
             rr.Body.String(), expected)
@@ -66,7 +66,7 @@ func TestNextNodeNoPathToTail(t *testing.T) {
             status, http.StatusOK)
     }
 
-    expected := `{"move": "right"}`
+    expected := `{"move":"right"}`
     if rr.Body.String() != expected {
         t.Errorf("handler returned unexpected body: got %v expected %v",
             rr.Body.String(), expected)
@@ -74,7 +74,7 @@ func TestNextNodeNoPathToTail(t *testing.T) {
 }
 
 func TestOnlyMoveIsDown(t *testing.T) {
-  t.Skip("too hard")
+  //t.Skip("too hard")
 	var r io.Reader
 	r = strings.NewReader("{\"game\":{\"id\":\"only-move-is-down\"},\"turn\":102,\"board\":{\"height\":7,\"width\":7,\"food\":[{\"x\":6,\"y\":0},{\"x\":0,\"y\":1},{\"x\":5,\"y\":3},{\"x\":5,\"y\":5},{\"x\":0,\"y\":3},{\"x\":6,\"y\":1},{\"x\":4,\"y\":2},{\"x\":4,\"y\":3},{\"x\":1,\"y\":1},{\"x\":3,\"y\":5}],\"snakes\":[{\"id\":\"b12189c4-ab53-4d72-a841-d452a1fe8c5c\",\"name\":\"j\",\"health\":100,\"body\":[{\"x\":0,\"y\":0},{\"x\":1,\"y\":0},{\"x\":2,\"y\":0},{\"x\":3,\"y\":0},{\"x\":4,\"y\":0},{\"x\":5,\"y\":0},{\"x\":5,\"y\":1},{\"x\":4,\"y\":1},{\"x\":3,\"y\":1},{\"x\":2,\"y\":1},{\"x\":2,\"y\":2},{\"x\":2,\"y\":3},{\"x\":2,\"y\":4},{\"x\":2,\"y\":5},{\"x\":1,\"y\":5},{\"x\":0,\"y\":5},{\"x\":0,\"y\":6},{\"x\":1,\"y\":6},{\"x\":2,\"y\":6},{\"x\":3,\"y\":6},{\"x\":4,\"y\":6},{\"x\":5,\"y\":6},{\"x\":6,\"y\":6},{\"x\":6,\"y\":5},{\"x\":6,\"y\":5}]}]},\"you\":{\"id\":\"b12189c4-ab53-4d72-a841-d452a1fe8c5c\",\"name\":\"j\",\"health\":100,\"body\":[{\"x\":0,\"y\":0},{\"x\":1,\"y\":0},{\"x\":2,\"y\":0},{\"x\":3,\"y\":0},{\"x\":4,\"y\":0},{\"x\":5,\"y\":0},{\"x\":5,\"y\":1},{\"x\":4,\"y\":1},{\"x\":3,\"y\":1},{\"x\":2,\"y\":1},{\"x\":2,\"y\":2},{\"x\":2,\"y\":3},{\"x\":2,\"y\":4},{\"x\":2,\"y\":5},{\"x\":1,\"y\":5},{\"x\":0,\"y\":5},{\"x\":0,\"y\":6},{\"x\":1,\"y\":6},{\"x\":2,\"y\":6},{\"x\":3,\"y\":6},{\"x\":4,\"y\":6},{\"x\":5,\"y\":6},{\"x\":6,\"y\":6},{\"x\":6,\"y\":5},{\"x\":6,\"y\":5}]}}")
 
@@ -97,7 +97,7 @@ func TestOnlyMoveIsDown(t *testing.T) {
             status, http.StatusOK)
     }
 
-    expected := `{"move": "down"}`
+    expected := `{"move":"down"}`
     if rr.Body.String() != expected {
         t.Errorf("handler returned unexpected body: got %v expected %v",
             rr.Body.String(), expected)

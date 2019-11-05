@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-type CoordList []Coord // remove if api is imported correctly
+type CoordList []Coord // remove if api is imported correctly (WHY WINDOWS?!?
 
 var edgeSnakeLimit int = 0;
 var turn int = 0;
@@ -52,6 +52,11 @@ func Start(res http.ResponseWriter, req *http.Request) {
 
 	fmt.Print("Start Pos: " + strconv.Itoa(headPos.X) + "," + strconv.Itoa(headPos.Y))
 
+	//log.Print("Should Be 2... " + strconv.Itoa( countOpenAjdacents(Coord{0,0}))
+ //log.Print("would be 2: " + strconv.Itoa(countOpenAjdacents(countOpenAjdacents(topLeft))))
+ //log.Print("would be 4: " + strconv.Itoa(countOpenAjdacents(countOpenAjdacents(Coord{1,1}))))
+ //log.Print("would be 3: " + strconv.Itoa(countOpenAjdacents(countOpenAjdacents(Coord{4,0}))))
+
 
 	if(numOfStartingSnakes == 1) {
 		log.Print("\n\n It's Gonna be a SOLO GAME \n")
@@ -84,8 +89,9 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	headPos = decoded.You.Body[0]
 	tailPos = getTailPos(me)
 	enemySnakes := decoded.Board.Snakes
-	foodList := decoded.Board.Food
+	//foodList := decoded.Board.Food
 
+	//log.Print("ESCAPE: around my head: " + strconv.Itoa(countEscapeRoutesFromCoord(headPos, decoded)))
 
 	if (len(decoded.Board.Food) == 0) && len(decoded.You.Body) >= 4 {
 		// NO FOOD... Bigger than 4 BodyParts,  No food on the board
@@ -96,10 +102,10 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		// Long En
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
 	} else {
-		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, NearestFood(foodList, headPos))
+		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, SafeFoodHead(decoded))
 		if (dist(headPos, tailPos) == 1) {
-			log.Print("Grabbing Food Close to TAIL!")
-			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, NearestFood(foodList, tailPos))
+			//log.Print("Grabbing Food Close to TAIL!")
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, SafeFoodTail(decoded))
 		}
 
 
@@ -164,6 +170,48 @@ func getTailPos(target Snake) Coord {
   return body[len(body) - 1]
 }
 
+func SafeFoodTail(req SnakeRequest) Coord {
+	You := getTailPos(req.You)
+	foodArray := req.Board.Food
+	var safeFood = foodArray[0]
+	var safeFoodF = Dist(foodArray[0], You)
+
+	for i := 0; i < len(foodArray); i++ {
+		if Dist(foodArray[i], You) < safeFoodF {
+			if (countEscapeRoutesFromCoord(foodArray[i], req) > 1) {
+				safeFood = foodArray[i]
+				safeFoodF = Dist(foodArray[i], You)
+			} else {
+				log.Print("TAIL food was not safe... skipping");
+			}
+		}
+	}
+
+	return safeFood
+}
+//safeClosestFood
+func SafeFoodHead(req SnakeRequest) Coord {
+	You := req.You.Body[0]
+	foodArray := req.Board.Food
+	var safeFood = foodArray[0]
+	var safeFoodF = Dist(foodArray[0], You)
+
+	for i := 0; i < len(foodArray); i++ {
+		if Dist(foodArray[i], You) < safeFoodF {
+			if (countEscapeRoutesFromCoord(foodArray[i], req) > 1){
+				safeFood = foodArray[i]
+				safeFoodF = Dist(foodArray[i], You)
+			} else {
+				log.Print("HEAD food was not safe... skipping");
+			}
+
+		}
+	}
+
+	return safeFood
+}
+
+
 func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
 		// doing a 180 is never safe, so check for that...
 		flipDir := invDir(currentDir)
@@ -193,7 +241,7 @@ func getRandomValidMove(game SnakeRequest) string {
 	headPos := game.You.Body[0]
 	//tailPos := getTailPos(game.You)
 	enemySnakes := game.Board.Snakes
-	allCoords := SurroundingCoordinates(headPos)
+	allCoords := getOpenAjdacentNodes(headPos)
 	for _,coord := range allCoords {
 		if (false == NodeBlocked(coord, enemySnakes)) {
 			dir := Heading(headPos, coord)
@@ -201,6 +249,7 @@ func getRandomValidMove(game SnakeRequest) string {
 				log.Print("skipping " + dir + " as it would crash into tail")
 				continue
 			}
+
 			if (false == isMoveOOB(headPos, dir)) {
 				return dir
 			}
@@ -258,6 +307,16 @@ func closestCorner(boardHeight int, boardWidth int, headPos Coord) Coord {
 		return targetCoord
 }
 
+func isNodeOnBoard(target Coord) bool {
+	if target.X < 0 || target.Y < 0 { // TOP LEFT CORDER NE
+		return false
+	}
+	if target.X > boardWidth - 1 || target.Y > boardHeight - 1 { // OOB Protection
+		return false
+	}
+	return true
+}
+
 // Shuffle... For use in find random direction
 
 func shuffle(src []string) []string {
@@ -270,6 +329,74 @@ func shuffle(src []string) []string {
   }
   return final
  }
+
+
+ func isFree(point Coord, req SnakeRequest) bool {
+ snakeList := req.Board.Snakes
+ 	for i := 0; i < len(snakeList); i++ {
+ 		for j := 0; j < len(snakeList[i].Body); j++ {
+ 			if snakeList[i].Body[j].X == point.X && snakeList[i].Body[j].Y == point.Y {
+ 				if len(snakeList[i].Body)-1 == j {
+ 					return false
+ 				}
+
+ 				return false
+ 			}
+ 		}
+ 	}
+ 	return true // free node
+ }
+
+func countEscapeRoutesFromCoord(search Coord, req SnakeRequest) int {
+	i := 0
+
+	if (isNodeOnBoard(Coord{X: search.X + 1, Y: search.Y})) {
+		if (isFree(Coord{X: search.X + 1, Y: search.Y}, req)) {
+			i++
+		}
+	}
+
+	if (isNodeOnBoard(Coord{X: search.X - 1, Y: search.Y})) {
+			if (isFree(Coord{X: search.X - 1, Y: search.Y}, req)) {
+				i++
+		  }
+	}
+
+	if (isNodeOnBoard(Coord{X: search.X, Y: search.Y + 1})) {
+		if (isFree(Coord{X: search.X, Y: search.Y + 1}, req)) {
+			i++
+		}
+	}
+
+	if (isNodeOnBoard(Coord{X: search.X, Y: search.Y - 1})) {
+		if (isFree(Coord{X: search.X, Y: search.Y - 1}, req)) {
+			i++
+		}
+	}
+	return i
+}
+
+func getOpenAjdacentNodes(search Coord) []Coord {
+	var validCoords = make([]Coord, 0)
+
+	if (isNodeOnBoard(Coord{X: search.X + 1, Y: search.Y})) {
+		validCoords = append(validCoords, Coord{X: search.X + 1, Y: search.Y})
+	}
+
+	if (isNodeOnBoard(Coord{X: search.X - 1, Y: search.Y})) {
+		validCoords = append(validCoords, Coord{X: search.X - 1, Y: search.Y})
+	}
+
+	if (isNodeOnBoard(Coord{X: search.X, Y: search.Y + 1})) {
+		validCoords = append(validCoords, Coord{X: search.X, Y: search.Y + 1})
+	}
+	if (isNodeOnBoard(Coord{X: search.X, Y: search.Y - 1})) {
+		validCoords = append(validCoords, Coord{X: search.X, Y: search.Y - 1})
+	}
+
+	return validCoords
+}
+
 
 func SurroundingCoordinates(search Coord) []Coord {
 	return []Coord{
