@@ -21,6 +21,18 @@ Hamilton path still needed.
 
 ## Changelog
 
+### v0.5.x (2019-11-04 21:20)
+
+v0.5
+Done:
+ - AStar search introduced
+ - Crash into Own tail if health > 99 fixed
+
+Todo:
+- update Astar to use board coords
+- update printGrid to cope with non-square board (Width x Height) instead of GridSize
+- add escapeRoute (isFoodSafe) when determining closest food
+
 ### v0.2.x
 
 v0.2

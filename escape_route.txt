@@ -1,0 +1,56 @@
+/*
+ * func: func countOpenAjdacents(target Coord) : int
+ * {
+ * Is there an open vertex next to this one?
+ * - Get all adjacent coords
+ * - Forach coord, if Coord !isOOB, $i++.
+ *  returns $i (min) 0 to (max) 4;
+ * }
+ *
+ * func: func getOpenAjdacentstarget Coord) : []Coord
+ * {
+ * Is there an open vertex next to this one?
+ * - Get all adjacent coords
+ * - Forach coord, if Coord isOOB, remove from list
+ *  returns all in bound Coords for target ([]Coord);
+ * }
+ *
+ *
+ *
+ */
+
+/*
+ func isFoodSafe(foodPos Coord) bool
+ {
+  if (countFreeExits(foodPos) <= 1) {
+  // if there is only one exit, the food has no escape route...
+  // let's skip this food... it's poison!
+    return false;
+  }
+  return true
+ }
+
+*/
+
+ /*
+  * func: func countFreeExits(target Coord) : int
+  * {
+  * Is there an open vertex next to this one?
+  * - Get all getOpenAjdacent(target)
+  * - Only count non-blocked exists (i.e. not blocked by other snake or self)
+  * - Forach openCoord, if Coord !isBlocked, $i++.
+  *  returns $i (min) 0 to (max) 4;
+  * }
+  *
+  * func: func getFreeExits(target Coord) : []Coord
+  * {
+  * Is there a free exit from this coord?
+  * - Get all getOpenAjdacent(target)
+  * - Only count non-blocked exists (i.e. not blocked by other snake or self)
+  * - Forach coord, if Coord isBlocked, remove from list
+  *  returns all exits for target ([]Coord);
+  * }
+  *
+  *
+  *
+  */
