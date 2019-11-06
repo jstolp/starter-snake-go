@@ -258,7 +258,7 @@ func getRandomValidMove(game SnakeRequest) string {
 		}
 	}
 
-	mapToGrid(game)
+	//mapToGrid(game)
 	log.Print("INVALID MOVE IN: getRandomValidMove")
  	return "invalid" // invalid move
 }
