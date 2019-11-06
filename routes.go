@@ -60,6 +60,7 @@ func Start(res http.ResponseWriter, req *http.Request) {
 
 	if(numOfStartingSnakes == 1) {
 		log.Print("\n\n It's Gonna be a SOLO GAME \n")
+		HUNGRY_TRESHOLD = 20
 	}
 	/*
 	 e19c41 - orange test 2
@@ -89,6 +90,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	headPos = decoded.You.Body[0]
 	tailPos = getTailPos(me)
 	enemySnakes := decoded.Board.Snakes
+	numberOfSnakes := len(decoded.Board.Snakes)
 	//foodList := decoded.Board.Food
 
 	//log.Print("ESCAPE: around my head: " + strconv.Itoa(countEscapeRoutesFromCoord(headPos, decoded)))
@@ -97,7 +99,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		// NO FOOD... Bigger than 4 BodyParts,  No food on the board
 		log.Print("no food on board... chasing tail...")
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
-	} else if (health > HUNGRY_TRESHOLD ) &&  len(decoded.You.Body) >= 4 {
+	} else if (health > (HUNGRY_TRESHOLD - (numberOfSnakes * -10)) ) &&  len(decoded.You.Body) >= 4 {
 		// THERE IS FOOD, Not HUNGRY_TRESHOLD
 		// Long En
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
@@ -256,6 +258,7 @@ func getRandomValidMove(game SnakeRequest) string {
 		}
 	}
 
+	mapToGrid(game)
 	log.Print("INVALID MOVE IN: getRandomValidMove")
  	return "invalid" // invalid move
 }
@@ -452,26 +455,26 @@ func End(res http.ResponseWriter, req *http.Request) {
 	return
 }
 
-func mapToGrid(decoded SnakeRequest, grid_size int) ([][]string) {
+func mapToGrid(decoded SnakeRequest) ([][]string) {
 
-
-  grid := make([][]string, grid_size)
+ // use decoded.Board.BoardHeight x decode.Board.BoardWidth for grid!
+  grid := make([][]string, decoded.Board.Height)
   me := decoded.You
   foodList := decoded.Board.Food
 
 
   for i := 0; i < len(grid); i++ {
-      grid[i] = make([]string, grid_size)
+      grid[i] = make([]string, decoded.Board.Width)
   }
 
-  for i := 0; i < grid_size; i++ {
+  for i := 0; i < decoded.Board.Height; i++ {
      grid[0][i] = "."
 
      grid[i][0] = "."
 
-     grid[grid_size-1][i] = "."
+     grid[decoded.Board.Height-1][i] = "."
 
-     grid[i][grid_size-1] = "."
+     grid[i][decoded.Board.Width-1] = "."
  }
 
 otherSnakes := decoded.Board.Snakes
@@ -540,20 +543,28 @@ for _, snake := range otherSnakes {
   if grid[r][c] != "#" {
      grid[r][c] = "T"
    }
-
+	 PrintGrid(grid)
  return grid;
 }
 
 func PrintGrid(grid [][]string) {
+	fmt.Print("|")
+	for i := 0; i < len(grid); i++ {
+			fmt.Print(strconv.Itoa(i))
+		}
+		fmt.Print("|\n")
     for i := 0; i < len(grid); i++ {
+				fmt.Print("|")
         for j := 0; j < len(grid[0]); j++ {
+
             if grid[i][j] == "" {
                 fmt.Printf(".")
             } else {
                 fmt.Print(grid[i][j])
             }
+
         }
-        fmt.Print("\n")
+        fmt.Print("|"+ strconv.Itoa(i)+"\n")
     }
     fmt.Print("\n")
 }
