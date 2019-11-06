@@ -21,7 +21,13 @@ Hamilton path still needed.
 
 ## Changelog
 
+
 ### v0.5.x (2019-11-04 21:20)
+
+v0.5.1 (adjusted number of snakes to hungry Threshold) testing:
+
+--> BattleSnakeRank before commit: 2019-11-06: #26. jstolp / GoPofAdder - 38.87 points 
+
 
 v0.5
 Done:
