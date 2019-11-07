@@ -176,6 +176,8 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		moveCoord = LongestPath(decoded, tailPos)
 		if (nil == moveCoord) {
 			log.Print("LONGEST PATH to TAIL NOT FOUND... DEAD?")
+			nextMove = getRandomValidMove(decoded)
+			log.Print("LONGEST PATH fatal... get random")
 		} else {
 			nextMove = Heading(headPos, moveCoord[1])
 			if (isNodeOnBoard(moveCoord[1]) && isFree(moveCoord[1], decoded)) {
@@ -377,9 +379,12 @@ func shuffle(src []string) []string {
  	for i := 0; i < len(snakeList); i++ {
  		for j := 0; j < len(snakeList[i].Body); j++ {
  			if snakeList[i].Body[j].X == point.X && snakeList[i].Body[j].Y == point.Y {
- 				if len(snakeList[i].Body)-1 == j {
- 					return false
- 				}
+				if (len(snakeList[i].Body)-1 == j && snakeList[i].Health < 99) {
+ 					return true // this is the tail... YES
+ 				} else {
+					// snake just ate... tail is fatal!
+					return false
+				}
 
  				return false
  			}
