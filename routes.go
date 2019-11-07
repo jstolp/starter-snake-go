@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"time"
 	"strconv"
+	"strings"
 )
 
 type CoordList []Coord // remove if api is imported correctly (WHY WINDOWS?!?
@@ -58,9 +59,9 @@ func Start(res http.ResponseWriter, req *http.Request) {
  //log.Print("would be 3: " + strconv.Itoa(countOpenAjdacents(countOpenAjdacents(Coord{4,0}))))
 
 
-	if(numOfStartingSnakes == 1) {
+	if (numOfStartingSnakes == 1) {
 		log.Print("\n\n It's Gonna be a SOLO GAME \n")
-		HUNGRY_TRESHOLD = 20
+		HUNGRY_TRESHOLD = 90
 	}
 	/*
 	 e19c41 - orange test 2
@@ -68,7 +69,7 @@ func Start(res http.ResponseWriter, req *http.Request) {
    ff4f00 - orange test 1 -nee te rood
 	*/
 	respond(res, StartResponse{
-		Color: "#e19c41",
+		Color: "#ff00aa",
 		HeadType: "sand-worm",
 		TailType: "curled",
 	})
@@ -90,41 +91,47 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	headPos = decoded.You.Body[0]
 	tailPos = getTailPos(me)
 	enemySnakes := decoded.Board.Snakes
-	numberOfSnakes := len(decoded.Board.Snakes)
+	//numberOfSnakes := len(decoded.Board.Snakes)
 	//foodList := decoded.Board.Food
 
 	//log.Print("ESCAPE: around my head: " + strconv.Itoa(countEscapeRoutesFromCoord(headPos, decoded)))
-
-	if (len(decoded.Board.Food) == 0) && len(decoded.You.Body) >= 4 {
+/*
+	if (health > 98) {
+		log.Print("goin to closestCorner")
+		targetCorner := closestCorner(boardHeight, boardWidth, headPos)
+		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, targetCorner)
+		if moveCoord == nil {
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
+		}
+	} else if (len(decoded.Board.Food) == 0) && len(decoded.You.Body) >= 4 {
 		// NO FOOD... Bigger than 4 BodyParts,  No food on the board
 		log.Print("no food on board... chasing tail...")
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
-	} else if (health > (HUNGRY_TRESHOLD - (numberOfSnakes * -10)) ) &&  len(decoded.You.Body) >= 4 {
-		// THERE IS FOOD, Not HUNGRY_TRESHOLD
-		// Long En
-		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
-	} else {
+	} else if (health < HUNGRY_TRESHOLD) {
+		// THERE IS FOOD, under HUNGRY_TRESHOLD
+		log.Print("Hunting for food! I'm below HUNGRY_TRESHOLD")
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, SafeFoodHead(decoded))
 		if (dist(headPos, tailPos) == 1) {
 			//log.Print("Grabbing Food Close to TAIL!")
 			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, SafeFoodTail(decoded))
 		}
 
-
 		if moveCoord == nil {
 			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
 		}
-	}
+	} else {
 
-	if (health > 98) {
 		targetCorner := closestCorner(boardHeight, boardWidth, headPos)
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, targetCorner)
 		if moveCoord == nil {
 			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, tailPos)
 		}
+		// Long En
 	}
 
-	if(len(moveCoord) < 1) {
+
+
+	if (moveCoord == nil || len(moveCoord) < 1) {
 		nextMove = getRandomValidMove(decoded)
 		log.Print("Used random valid Move: " + nextMove)
 	} else {
@@ -145,16 +152,48 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		log.Print("Turn "+ strconv.Itoa(turn) + " is my last... Dag mooie wereld!")
 	}
 
+
 	// Check if we still have a path to tail... if not.... let's switch tactics:
 	if (nil == Astar(boardHeight, boardWidth, me, enemySnakes, getTailPos(me))) {
-		//log.Print("Switch Tactic to LONGEST PATH!!!!")
+		// my Tail is not reachable by shortest path!
+		log.Print("Switch Tactic to LONGEST PATH!!!!")
+
 		//dd(decoded)
 	}
 
+	*/
+	if (health < 20) {
+		//log.Print("HUNTING AFTER LONGEST PATH!!!")
+		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, SafeFoodHead(decoded))
+		nextMove = Heading(headPos, moveCoord[1])
+		if (isNodeOnBoard(moveCoord[1]) && isFree(moveCoord[1], decoded)) {
+			//log.Print("FoodMove is safe")
+		} else {
+			log.Print("Food is FATAL... other move")
+			nextMove = getRandomValidMove(decoded)
+		}
+	} else {
+		moveCoord = LongestPath(decoded, tailPos)
+		if (nil == moveCoord) {
+			log.Print("LONGEST PATH to TAIL NOT FOUND... DEAD?")
+		} else {
+			nextMove = Heading(headPos, moveCoord[1])
+			if (isNodeOnBoard(moveCoord[1]) && isFree(moveCoord[1], decoded)) {
+				//log.Print("longest path is SAFE")
+			} else {
+				nextMove = getRandomValidMove(decoded)
+				log.Print("LONGEST PATH fatal... got random move")
+			}
+		}
+   }
 
-	//dd(decoded)
+	//mapToGrid(decoded)
+	//minifyPrint(decoded)
+
 
 	fmt.Print("T " + strconv.Itoa(turn) + " Health:" + strconv.Itoa(health) + " Move: " + nextMove + "\n")
+
+
 	respond(res, MoveResponse{
 		Move: nextMove,
 	})
@@ -258,7 +297,6 @@ func getRandomValidMove(game SnakeRequest) string {
 		}
 	}
 
-	//mapToGrid(game)
 	log.Print("INVALID MOVE IN: getRandomValidMove")
  	return "invalid" // invalid move
 }
@@ -441,6 +479,12 @@ func dd(obj interface{}) {
 	}
 }
 
+func minifyPrint(obj interface{}) {
+	data, err := json.MarshalIndent(obj, "", "")
+	if err == nil {
+		fmt.Println(strings.Replace(string(data), " ", "", -1))
+	}
+}
 func Ping(res http.ResponseWriter, req *http.Request) {
 	log.Print("PONG to a server ping... \n")
 	return

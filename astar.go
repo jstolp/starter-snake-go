@@ -59,13 +59,183 @@ func reverseCoords(path []Coord) []Coord {
 	return path
 }
 
+
+func LongestPath(game SnakeRequest, target Coord) []Coord {
+		closedList := make(map[Coord]bool)
+		openList := make([]Node, 0)
+		pathTracker := make(map[Coord]Coord)
+
+		me := game.You
+		headPos := Node{Coord: me.Body[0], G: 0, H: 0, F: 0}
+		openList = append(openList, headPos)
+
+		for len(openList) > 0 {
+			// BIGGEST F!!!
+			var closeNode = openList[0]
+			for _, openItem := range openList {
+				if openItem.F > closeNode.F {
+					closeNode = openItem
+				}
+			}
+
+			// put it on the closed list
+			closedList[closeNode.Coord] = true
+			openList = removeFromOpenList(closeNode, openList)
+			// loop through leastNodes's adjacent tiles -- call them T
+			closeNeighbours := GetAdjacentCoords(closeNode.Coord)
+
+			for _, neighbour := range closeNeighbours {
+
+				// 1. If T on the closed list, ignore it
+				if closedList[neighbour] {
+					continue
+				}
+
+				if neighbour == target {
+
+					closedList[neighbour] = true
+
+					path := make([]Coord, 0)
+					path = append(path, target)
+					path = append(path, neighbour)
+					current := closeNode.Coord
+					path = append(path, current)
+
+					_, pathway := pathTracker[current]
+
+					for ; pathway; _, pathway = pathTracker[current] {
+						current = pathTracker[current]
+						path = append(path, current)
+					}
+
+					return reverseCoords(path)
+				}
+
+				// 2. If T is not on the open list add it
+				for _, item := range openList {
+					if neighbour == item.Coord {
+						if NodeBlocked(neighbour, game.Board.Snakes) == false && OnBoard(neighbour, game.Board.Height, game.Board.Width) {
+							if (closeNode.G+1)+Dist(neighbour, target) > item.F {
+								item.F = (closeNode.G + 1) + Dist(neighbour, target)
+								item.G = closeNode.G + 1
+								item.H = Dist(neighbour, target)
+								item.ParentCoords = neighbour
+
+								pathTracker[item.Coord] = closeNode.Coord
+							}
+						}
+					}
+				}
+
+				var openNode = Node{
+					Coord:        neighbour,
+					G:            closeNode.G + 1,
+					H:            Dist(neighbour, target),
+					F:            (closeNode.G + 1) + (Dist(neighbour, target)),
+					ParentCoords: closeNode.Coord,
+				}
+
+				pathTracker[neighbour] = closeNode.Coord
+				openList = appendList(openNode, game.Board.Snakes, openList, game.Board.Height, game.Board.Width)
+
+			}
+
+		}
+		return nil
+}
+
+
+func AstarBoard(game SnakeRequest, target Coord) []Coord {
+		closedList := make(map[Coord]bool)
+		openList := make([]Node, 0)
+		pathTracker := make(map[Coord]Coord)
+
+		me := game.You
+		headPos := Node{Coord: me.Body[0], G: 0, H: 0, F: 0}
+		openList = append(openList, headPos)
+
+		for len(openList) > 0 {
+			// find the Node the least F on the open list
+			var closeNode = openList[0]
+			for _, openItem := range openList {
+				if openItem.F < closeNode.F {
+					closeNode = openItem
+				}
+			}
+
+			// put it on the closed list
+			closedList[closeNode.Coord] = true
+			openList = removeFromOpenList(closeNode, openList)
+			// loop through leastNodes's adjacent tiles -- call them T
+			closeNeighbours := GetAdjacentCoords(closeNode.Coord)
+
+			for _, neighbour := range closeNeighbours {
+
+				// 1. If T on the closed list, ignore it
+				if closedList[neighbour] {
+					continue
+				}
+
+				if neighbour == target {
+
+					closedList[neighbour] = true
+
+					path := make([]Coord, 0)
+					path = append(path, target)
+					path = append(path, neighbour)
+					current := closeNode.Coord
+					path = append(path, current)
+
+					_, pathway := pathTracker[current]
+
+					for ; pathway; _, pathway = pathTracker[current] {
+						current = pathTracker[current]
+						path = append(path, current)
+					}
+
+					return reverseCoords(path)
+				}
+
+				// 2. If T is not on the open list add it
+				for _, item := range openList {
+					if neighbour == item.Coord {
+						if NodeBlocked(neighbour, game.Board.Snakes) == false && OnBoard(neighbour, game.Board.Height, game.Board.Width) {
+							if (closeNode.G+1)+Dist(neighbour, target) < item.F {
+								item.F = (closeNode.G + 1) + Dist(neighbour, target)
+								item.G = closeNode.G + 1
+								item.H = Dist(neighbour, target)
+								item.ParentCoords = neighbour
+
+								pathTracker[item.Coord] = closeNode.Coord
+							}
+						}
+					}
+				}
+
+				var openNode = Node{
+					Coord:        neighbour,
+					G:            closeNode.G + 1,
+					H:            Dist(neighbour, target),
+					F:            (closeNode.G + 1) + (Dist(neighbour, target)),
+					ParentCoords: closeNode.Coord,
+				}
+
+				pathTracker[neighbour] = closeNode.Coord
+				openList = appendList(openNode, game.Board.Snakes, openList, game.Board.Height, game.Board.Width)
+
+			}
+
+		}
+		return nil
+}
+
 func Astar(BoardHeight int, BoardWidth int, me Snake, Snakes []Snake, target Coord) []Coord {
 	closedList := make(map[Coord]bool)
 	openList := make([]Node, 0)
 	pathTracker := make(map[Coord]Coord)
 
-	myHead := Node{Coord: me.Body[0], G: 0, H: 0, F: 0}
-	openList = append(openList, myHead)
+	headPos := Node{Coord: me.Body[0], G: 0, H: 0, F: 0}
+	openList = append(openList, headPos)
 
 	for len(openList) > 0 {
 
@@ -91,7 +261,7 @@ func Astar(BoardHeight int, BoardWidth int, me Snake, Snakes []Snake, target Coo
 			}
 
 			if neighbour == target {
-
+				// WE FOUND A PATH TO THE TARGET! :D
 				closedList[neighbour] = true
 
 				path := make([]Coord, 0)
@@ -113,6 +283,7 @@ func Astar(BoardHeight int, BoardWidth int, me Snake, Snakes []Snake, target Coo
 			// 2. If T is not on the open list add it
 			for _, item := range openList {
 				if neighbour == item.Coord {
+					// only if on Board, and not Blocked By Snakes
 					if NodeBlocked(neighbour, Snakes) == false && OnBoard(neighbour, BoardHeight, BoardWidth) {
 						if (closeNode.G+1)+Dist(neighbour, target) < item.F {
 							item.F = (closeNode.G + 1) + Dist(neighbour, target)
