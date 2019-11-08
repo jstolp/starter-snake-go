@@ -1,4 +1,45 @@
 /*
+document_ids
+
+docs:
+
+https://en.wikipedia.org/wiki/Maze_solving_algorithm#Tr.C3.A9maux.27s_algorithm
+
+https://www.sciencedirect.com/science/article/pii/S0166218X11003088
+
+https://www.geeksforgeeks.org/find-the-longest-path-in-a-matrix-with-given-constraints/
+
+procedure longestPathLength(T : Tree) = helper(T)[2]
+
+/* Recursive helper function that returns (h,p)
+ * where h is the height of T and p the length
+ * of the longest path of T (its diameter) */
+procedure helper(T : Tree) : (int, int) = {
+  if ( T.children.isEmpty ) {
+    return (0,0)
+  }
+  else {
+    // Calculate heights and longest path lengths of children
+    recursive = T.children.map { c => helper(c) }
+    heights = recursive.map { p => p[1] }
+    paths = recursive.map { p => p[2] }
+
+    // Find the two largest subtree heights
+    height1 = heights.max
+    if (heights.length == 1) {
+      height2 = -1
+    } else {
+      height2 = (heights.remove(height1)).max
+    }
+
+    // Determine length of longest path (see above)
+    longest = max(paths.max, height1 + height2 + 2)
+
+    return (height1 + 1, longest)
+  }
+}
+
+
  * func: func countOpenAjdacents(target Coord) : int
  * {
  * Is there an open vertex next to this one?
