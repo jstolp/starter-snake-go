@@ -91,6 +91,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	headPos = decoded.You.Body[0]
 	tailPos = getTailPos(me)
 	enemySnakes := decoded.Board.Snakes
+	validMoves := len(getPossibleMoves(decoded))
 	//numberOfSnakes := len(decoded.Board.Snakes)
 	//foodList := decoded.Board.Food
 
@@ -162,9 +163,37 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	}
 
 	*/
+
+	if (validMoves == 0) {
+		// easy let's move that way
+		log.Print("I'm dead this round...")
+	}
+
+	if (validMoves == 1) {
+		// easy let's move that way
+		log.Print("Only one move possible")
+	}
+
+	if(validMoves == 2) {
+		log.Print("2 Valid moves... let's decide!")
+		allMoves := getPossibleMoves(decoded)
+		for _,checkMove := range allMoves {
+			dir := goToDir(headPos, checkMove)
+			if (nil == AStarBoardFromTo(decoded, checkMove, tailPos)) {
+				// no path from next valid move to tail...
+				log.Print(dir + " NO PATH to tail")
+			} else {
+				log.Print(dir + " has PATH to my tail")
+			}
+		}
+	}
+
 	if (health < 20) {
 		//log.Print("HUNTING AFTER LONGEST PATH!!!")
 		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, SafeFoodHead(decoded))
+		if (nil == moveCoord) {
+			moveCoord = AstarBoard(decoded, tailPos)
+		}
 		nextMove = Heading(headPos, moveCoord[1])
 		if (isNodeOnBoard(moveCoord[1]) && isFree(moveCoord[1], decoded)) {
 			//log.Print("FoodMove is safe")
@@ -173,7 +202,10 @@ func Move(res http.ResponseWriter, req *http.Request) {
 			nextMove = getRandomValidMove(decoded)
 		}
 	} else {
-		moveCoord = LongestPath(decoded, tailPos)
+		if (nil != AstarBoard(decoded, tailPos)) {
+			moveCoord = LongestPath(decoded, tailPos)
+		}
+
 		if (nil == moveCoord) {
 			log.Print("LONGEST PATH to TAIL NOT FOUND... DEAD?")
 			nextMove = getRandomValidMove(decoded)
@@ -278,6 +310,27 @@ func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
 
 		//log.Print("The move " + targetDir + " is safe...\n")
 		return false
+}
+
+/**
+returns list of coords that are possible
+*/
+func getPossibleMoves(game SnakeRequest) []Coord {
+	var validCoords = make([]Coord, 0)
+
+	headPos := game.You.Body[0]
+	//tailPos := getTailPos(game.You)
+	enemySnakes := game.Board.Snakes
+	allCoords := getOpenAjdacentNodes(headPos)
+	for _,coord := range allCoords {
+		dir := Heading(headPos, coord)
+		if (false == isMoveOOB(headPos, dir)) {
+			if (false == NodeBlockedExceptTail(coord, enemySnakes)) {
+				validCoords = append(validCoords,coord)
+			}
+		}
+  }
+		return validCoords
 }
 
 func getRandomValidMove(game SnakeRequest) string {
