@@ -4,6 +4,7 @@ import (
 	. "github.com/jstolp/pofadder-go/api"
 	"math"
 	"fmt"
+	"log"
 )
 
 /*
@@ -432,6 +433,50 @@ func minDistFood(headPos Coord, food []Coord) Coord {
 func OnBoard(vertex Coord, boardHeight int, boardWidth int) bool {
 	if vertex.X >= 0 && vertex.X < boardWidth && vertex.Y >= 0 && vertex.Y < boardHeight {
 		return true
+	}
+
+	return false
+}
+
+func NodeDangerous(game SnakeRequest, point Coord) bool {
+
+	myLength := len(game.You.Body)
+
+	for i := 0; i < len(game.Board.Snakes); i++ {
+
+		if (game.Board.Snakes[i].ID != game.You.ID) { // not myself
+			// i'm shorter dan this snake!
+			if(myLength <= len(game.Board.Snakes[i].Body)) {
+					theirMoves := GetAdjacentCoords(game.Board.Snakes[i].Body[0])
+					for k := 0; k < len(theirMoves); k++ {
+						if (theirMoves[k].X == point.X && theirMoves[k].Y == point.Y) {
+							log.Print("This can be a headcrash")
+							return true
+						}
+					}
+			}
+			//		closeNeighbours := GetAdjacentCoords(game.Board.Snakes[i].Body[0])
+		//					for _, neighbour := range closeNeighbours { if point (return True) }
+		} else {
+			// it's me
+		}
+
+		for j := 0; j < len(game.Board.Snakes[i].Body); j++ {
+			if game.Board.Snakes[i].Body[j].X == point.X && game.Board.Snakes[i].Body[j].Y == point.Y {
+				if len(game.Board.Snakes[i].Body)-1 == j {
+
+					if (game.Board.Snakes[i].Health > 99) {
+						return true
+					} else {
+						//fmt.Print("Tail is safe... will move next turn")
+						return false
+					}
+
+				}
+				// it's in a snakes head.
+				return true
+			}
+		}
 	}
 
 	return false

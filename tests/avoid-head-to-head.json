@@ -1,0 +1,99 @@
+{
+  "game": {
+    "id": "769a9d33-f383-4814-bf12-ab7c41a8174d",
+    "description": "In this game i (j) need to avoid a HEAD TO HEAD WITH Venom... Right IS a valid move, but near snake head of a longer snake..."
+  },
+  "turn": 25,
+  "board": {
+    "height": 6,
+    "width": 6,
+    "food": [],
+    "snakes": [
+      {
+        "id": "2ab88aab-4467-453e-b32f-e06e3b8fe10c",
+        "name": "j",
+        "health": 97,
+        "body": [
+          {
+            "x": 4,
+            "y": 3
+          },
+          {
+            "x": 3,
+            "y": 3
+          },
+          {
+            "x": 2,
+            "y": 3
+          },
+          {
+            "x": 1,
+            "y": 3
+          },
+          {
+            "x": 0,
+            "y": 3
+          }
+        ]
+      },
+      {
+        "id": "d8842baf-e819-4f7e-8e28-53ec796fda38",
+        "name": "venom",
+        "health": 100,
+        "body": [
+          {
+            "x": 5,
+            "y": 2
+          },
+          {
+            "x": 4,
+            "y": 2
+          },
+          {
+            "x": 3,
+            "y": 2
+          },
+          {
+            "x": 2,
+            "y": 2
+          },
+          {
+            "x": 1,
+            "y": 2
+          },
+          {
+            "x": 1,
+            "y": 2
+          }
+        ]
+      }
+    ]
+  },
+  "you": {
+    "id": "2ab88aab-4467-453e-b32f-e06e3b8fe10c",
+    "name": "j",
+    "health": 97,
+    "body": [
+      {
+        "x": 4,
+        "y": 3
+      },
+      {
+        "x": 3,
+        "y": 3
+      },
+      {
+        "x": 2,
+        "y": 3
+      },
+      {
+        "x": 1,
+        "y": 3
+      },
+      {
+        "x": 0,
+        "y": 3
+      }
+    ]
+  }
+}

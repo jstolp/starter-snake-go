@@ -46,9 +46,10 @@ func Start(res http.ResponseWriter, req *http.Request) {
 		log.Printf("Bad start request: %v", err)
 	}
 
+
 	headPos = decoded.You.Body[0]
 	boardHeight, boardWidth = decoded.Board.Height, decoded.Board.Width // SE corner X, Y
-
+  numOfStartingSnakes = len(decoded.Board.Snakes)
 	log.Print("Enemy Snakes: " + strconv.Itoa(numOfStartingSnakes - 1) + "\n\n")
 
 	fmt.Print("Start Pos: " + strconv.Itoa(headPos.X) + "," + strconv.Itoa(headPos.Y))
@@ -174,35 +175,52 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		log.Print("Only one move possible")
 	}
 
-	if(validMoves == 2) {
-		log.Print("2 Valid moves... let's decide!")
-		allMoves := getPossibleMoves(decoded)
-		for _,checkMove := range allMoves {
-			dir := goToDir(headPos, checkMove)
-			if (nil == AStarBoardFromTo(decoded, checkMove, tailPos)) {
-				// no path from next valid move to tail...
-				log.Print(dir + " NO PATH to tail")
+
+
+	if (health < HUNGRY_TRESHOLD) {
+		log.Print("under hungry HUNGRY_TRESHOLD")
+		if(len(decoded.Board.Food) > 0) {
+		//log.Print("HUNTING AFTER LONGEST PATH!!!")
+			moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, SafeFoodHead(decoded))
+			if (nil == moveCoord) {
+				moveCoord = AstarBoard(decoded, tailPos)
+			}
+			nextMove = Heading(headPos, moveCoord[1])
+			if (isSafe(moveCoord[1], decoded)) {
+				log.Print("FoodMove is safe")
 			} else {
-				log.Print(dir + " has PATH to my tail")
+				log.Print("Food is FATAL... other move")
+				if ("no" != newPossibleMoves(decoded)) {
+						nextMove = newPossibleMoves(decoded)
+				}
+				//if()
+				//nextMove = getRandomValidMove(decoded)
+			}
+		} else {
+			// no food chasing tail
+			moveCoord = AstarBoard(decoded, tailPos)
+			if (nil == moveCoord) {
+				log.Print("Oh.. there is no Path to tail... get a random move...")
+				nextMove = getRandomValidMove(decoded)
+			}
+			if (isNodeOnBoard(moveCoord[1]) && isFree(moveCoord[1], decoded)) {
+				nextMove = Heading(headPos, moveCoord[1])
+			} else {
+				nextMove = getRandomValidMove(decoded)
+				log.Print("LONGEST PATH fatal... got random move")
 			}
 		}
-	}
-
-	if (health < 20) {
-		//log.Print("HUNTING AFTER LONGEST PATH!!!")
-		moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, SafeFoodHead(decoded))
-		if (nil == moveCoord) {
-			moveCoord = AstarBoard(decoded, tailPos)
-		}
-		nextMove = Heading(headPos, moveCoord[1])
-		if (isNodeOnBoard(moveCoord[1]) && isFree(moveCoord[1], decoded)) {
-			//log.Print("FoodMove is safe")
-		} else {
-			log.Print("Food is FATAL... other move")
-			nextMove = getRandomValidMove(decoded)
-		}
 	} else {
+		// I'm not hungry... or there is no food...
+
+				// if there is a safe move... take THAT!
+				//if ("no" != newPossibleMoves(decoded)) {
+				//log.Print("Took the newPossibleMoves")
+				//nextMove = newPossibleMoves(decoded)
+				//}
+
 		if (nil != AstarBoard(decoded, tailPos)) {
+			log.Print("there is a shortPath To my tail...")
 			moveCoord = LongestPath(decoded, tailPos)
 		}
 
@@ -211,22 +229,28 @@ func Move(res http.ResponseWriter, req *http.Request) {
 			nextMove = getRandomValidMove(decoded)
 			log.Print("LONGEST PATH fatal... get random")
 		} else {
-			nextMove = Heading(headPos, moveCoord[1])
-			if (isNodeOnBoard(moveCoord[1]) && isFree(moveCoord[1], decoded)) {
-				//log.Print("longest path is SAFE")
+			if (isSafe(moveCoord[1], decoded)) {
+				log.Print("moveCoord was deemed safe...")
+				nextMove = Heading(headPos, moveCoord[1])
 			} else {
 				nextMove = getRandomValidMove(decoded)
 				log.Print("LONGEST PATH fatal... got random move")
 			}
-		}
+		} // only take the longest path if it's safe!
    }
+
+	 if (validMoves == 2) {
+		 log.Print("2 moves possible... lets check")
+		 //nextMove =
+	 }
+ 		//log.Print("2 moves... let's decide!")
+		//log.Print(newPossibleMoves(decoded))
 
 	//mapToGrid(decoded)
 	//minifyPrint(decoded)
 
 
 	fmt.Print("T " + strconv.Itoa(turn) + " Health:" + strconv.Itoa(health) + " Move: " + nextMove + "\n")
-
 
 	respond(res, MoveResponse{
 		Move: nextMove,
@@ -273,7 +297,8 @@ func SafeFoodHead(req SnakeRequest) Coord {
 
 	for i := 0; i < len(foodArray); i++ {
 		if Dist(foodArray[i], You) < safeFoodF {
-			if (countEscapeRoutesFromCoord(foodArray[i], req) > 1){
+
+			if (!isSafe(foodArray[i], req) || countEscapeRoutesFromCoord(foodArray[i], req) > 1){
 				safeFood = foodArray[i]
 				safeFoodF = Dist(foodArray[i], You)
 			} else {
@@ -312,6 +337,15 @@ func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
 		return false
 }
 
+func newPossibleMoves(game SnakeRequest) string {
+	allCoords := SurroundingCoordinates(game.You.Body[0])
+	for _,coord := range allCoords {
+			if (isSafe(coord, game)) {
+				return goToDir(game.You.Body[0], coord)
+			}
+		}
+		return "no"
+}
 /**
 returns list of coords that are possible
 */
@@ -338,7 +372,15 @@ func getRandomValidMove(game SnakeRequest) string {
 	//tailPos := getTailPos(game.You)
 	enemySnakes := game.Board.Snakes
 	allCoords := getOpenAjdacentNodes(headPos)
+
+	//newPossibleMoves
+	//if()
 	for _,coord := range allCoords {
+		if (isSafe(coord, game)) {
+			log.Print("Got the Most Optimal Route in random move...")
+			return Heading(headPos, coord)
+			// if we have a safe Move.. return that one, else... each one is as bad af them..
+		}
 		if (false == NodeBlocked(coord, enemySnakes)) {
 			dir := Heading(headPos, coord)
 			if(game.You.Health > 99 && dist(headPos, tailPos) == 1 && dir == goToDir(headPos, tailPos)) {
@@ -347,13 +389,20 @@ func getRandomValidMove(game SnakeRequest) string {
 			}
 
 			if (false == isMoveOOB(headPos, dir)) {
+				log.Println("false is move OOB")
 				return dir
 			}
 		}
 	}
 
 	log.Print("INVALID MOVE IN: getRandomValidMove")
- 	return "invalid" // invalid move
+	escapeRoutes := countEscapeRoutesFromCoord(headPos, game)
+	//dd(GetAdjacentCoords(headPos))
+	log.Print("escape routes: " + strconv.Itoa(escapeRoutes))
+	log.Print("new possbile: " + newPossibleMoves(game))
+	return newPossibleMoves(game)
+	//return "invalid"
+ 	//return getAnyMove(game) // invalid move
 }
 
 
@@ -427,12 +476,49 @@ func shuffle(src []string) []string {
  }
 
 
+	func isSafe(point Coord, game SnakeRequest) bool {
+		//if (!isNodeOnBoard(point)) {
+//			return false
+		//}
+
+		snakeList := game.Board.Snakes
+		 for i := 0; i < len(snakeList); i++ {
+			 for j := 0; j < len(snakeList[i].Body); j++ {
+				 if ( snakeList[i].ID != game.You.ID && len(snakeList[i].Body) >= len(game.You.Body)) {
+					 // this snake is longer than you, avoid it's next steps if possible!
+					 for _, snakeCoord := range GetAdjacentCoords(snakeList[i].Body[0]) {
+						 if (point.X == snakeCoord.X && point.Y == snakeCoord.Y) {
+							 // if the next move is a possibleOne for a enemy... it's not safe
+							 return false
+						 }
+					 } // end for "adjacentCoords" for the enemy snake coords...
+
+				 }
+
+				 if snakeList[i].Body[j].X == point.X && snakeList[i].Body[j].Y == point.Y {
+					 if (len(snakeList[i].Body)-1 == j && snakeList[i].Health < 99) {
+						 log.Print("tail is safe to step...")
+						 return true // this is the tail... YES
+					 } else {
+						 // snake just ate... tail is fatal!
+						 return false
+					 }
+
+					 return false
+				 }
+			 }
+		 }
+		 return true // free node
+	}
+
+
  func isFree(point Coord, req SnakeRequest) bool {
  snakeList := req.Board.Snakes
  	for i := 0; i < len(snakeList); i++ {
  		for j := 0; j < len(snakeList[i].Body); j++ {
  			if snakeList[i].Body[j].X == point.X && snakeList[i].Body[j].Y == point.Y {
 				if (len(snakeList[i].Body)-1 == j && snakeList[i].Health < 99) {
+					log.Print("tail is safe to step...")
  					return true // this is the tail... YES
  				} else {
 					// snake just ate... tail is fatal!
@@ -445,6 +531,7 @@ func shuffle(src []string) []string {
  	}
  	return true // free node
  }
+
 
 func countEscapeRoutesFromCoord(search Coord, req SnakeRequest) int {
 	i := 0
