@@ -272,7 +272,8 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		 //coordList := getPossibleMoves(decoded)
 		 //nextMove :=
 		 if (isMoveOOB(headPos, nextMove)) {
-			 log.Print("OOB DEEMED it out of BOUND!")
+			 log.Print("OOB DEEMED it out of BOUND! get a new one!")
+			 nextMove = getRandomValidMove(decoded)
 		 }
 		 //nextMove =
 	 }
@@ -302,7 +303,8 @@ func getEnemyHeadPos(game SnakeRequest) []Coord {
 		coordList := make([]Coord, 0)
 		snakeList := game.Board.Snakes
 		 for i := 0; i < len(snakeList); i++ {
-				 if ( snakeList[i].ID != game.You.ID && len(snakeList[i].Body) <= len(game.You.Body) ) {
+				 if ( snakeList[i].ID != game.You.ID && len(snakeList[i].Body) < len(game.You.Body) ) {
+					 // only if snake is 2 smaller!!! 2 < (3+1)
 					 // if the snake is not you and smaller.. it's food
 					 coordList = append(coordList, snakeList[i].Body[0])
 				 }
