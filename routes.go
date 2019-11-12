@@ -170,10 +170,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		log.Print("I'm dead this round...")
 	}
 
-	if (validMoves == 1) {
-		// easy let's move that way
-		log.Print("Only one move possible")
-	}
+
 
 
 
@@ -189,10 +186,22 @@ func Move(res http.ResponseWriter, req *http.Request) {
 						// Food is not reachable... neither is my tail...
 						nextMove = getRandomValidMove(decoded)
 					}
+				} else {
+
+					if (isSafe(moveCoord[1], decoded)) {
+						// safe move.
+						nextMove = Heading(headPos, moveCoord[1])
+					} else {
+						// panic... getRandomValidMove
+						log.Print("PANIC!!! NO VALID MOVE.")
+						nextMove = getRandomValidMove(decoded)
+					}
+
 				}
 
-				if (isSafe(moveCoord[1], decoded)) {
-					log.Print("FoodMove is safe but is there a route to tail from there???")
+
+/*				if (isSafe(moveCoord[1], decoded)) {
+					//log.Print("FoodMove is safe but is there a route to tail from there???")
 					// if so, let's move there... if not... let's just go to my tail...
 					nextMove = Heading(headPos, moveCoord[1])
 				} else {
@@ -208,12 +217,9 @@ func Move(res http.ResponseWriter, req *http.Request) {
 							nextMove = Heading(headPos, moveCoord[1])
 						}
 					}
-					//if ("no" != newPossibleMoves(decoded)) {
-					//		nextMove = newPossibleMoves(decoded)
-					//}
-					//if()
-					//nextMove = getRandomValidMove(decoded)
 				}
+*/
+
 			} else {
 				// NO FOOD!!!
 				moveCoord = AstarBoard(decoded, tailPos)
@@ -262,6 +268,8 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
 	 if (validMoves == 2) {
 		 log.Print("2 moves possible... lets check")
+		 //coordList := getPossibleMoves(decoded)
+		 //nextMove :=
 		 if (isMoveOOB(headPos, nextMove)) {
 			 log.Print("OOB DEEMED it out of BOUND!")
 		 }
@@ -272,7 +280,12 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
 	//mapToGrid(decoded)
 	//minifyPrint(decoded)
-
+	if (validMoves == 1) {
+		// easy let's move that way
+		coordList := getPossibleMoves(decoded)
+		nextMove = goToDir(headPos, coordList[0])
+		log.Print("Only one move possible... New Safe Tail?")
+	}
 
 	fmt.Print("T " + strconv.Itoa(turn) + " Health:" + strconv.Itoa(health) + " Move: " + nextMove + "\n")
 
@@ -396,28 +409,35 @@ func getRandomValidMove(game SnakeRequest) string {
 	//tailPos := getTailPos(game.You)
 	enemySnakes := game.Board.Snakes
 	allCoords := getOpenAjdacentNodes(headPos)
+	nextDir := "invalid"
 
-	//newPossibleMoves
-	//if()
+
 	for _,coord := range allCoords {
-		if (isSafe(coord, game) && false == NodeBlocked(coord, enemySnakes)) {
-			// is isSafe correct U
-			log.Print("Got the Most Optimal Route in random move...")
-			return Heading(headPos, coord)
-			// if we have a safe Move.. return that one, else... each one is as bad af them..
-		}
-		if (false == NodeBlocked(coord, enemySnakes)) {
-			dir := Heading(headPos, coord)
-			if(game.You.Health > 99 && dist(headPos, tailPos) == 1 && dir == goToDir(headPos, tailPos)) {
-				log.Print("skipping " + dir + " as it would crash into tail")
-				continue
+			if (isSafe(coord, game) && false == NodeBlocked(coord, enemySnakes)) {
+				// is isSafe correct U
+				log.Print("Got the Most Optimal Route in random move...")
+				return Heading(headPos, coord)
+				// if we have a safe Move.. return that one, else... each one is as bad af them..
 			}
 
-			if (false == isMoveOOB(headPos, dir)) {
-				log.Println("false is move OOB")
-				return dir
-			}
+			if (false == NodeBlocked(coord, enemySnakes)) {
+				dir := Heading(headPos, coord)
+				if(game.You.Health > 99 && dist(headPos, tailPos) == 1 && dir == goToDir(headPos, tailPos)) {
+					log.Print("skipping " + dir + " as it would crash into tail")
+					continue
+				}
+
+				if (false == isMoveOOB(headPos, dir)) {
+					log.Println("false is move OOB")
+					// if nothing better aries, this is the one...
+					nextDir = dir
+				}
 		}
+	}
+
+	if (nextDir != "invalid") {
+		// if the loop didn't find a safe coordinate... use the next best thing...
+		return nextDir
 	}
 
 	log.Print("INVALID MOVE IN: getRandomValidMove")
@@ -502,9 +522,9 @@ func shuffle(src []string) []string {
 
 
 	func isSafe(point Coord, game SnakeRequest) bool {
-		//if (!isNodeOnBoard(point)) {
-//			return false
-		//}
+		if (!isNodeOnBoard(point)) {
+			return false
+		}
 
 		snakeList := game.Board.Snakes
 		 for i := 0; i < len(snakeList); i++ {

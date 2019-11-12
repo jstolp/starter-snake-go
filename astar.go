@@ -536,7 +536,6 @@ func goToDir(curr Coord, next Coord) string {
 	return dir
 }
 
-// Heading determines the direction between two points - must be side by side
 func Heading(startingPoint Coord, headingPoint Coord) string {
 	if headingPoint.X > startingPoint.X {
 		return "right"
