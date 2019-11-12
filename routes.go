@@ -172,57 +172,54 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
 
 
-
+	enemyHeadPosList := getEnemyHeadPos(decoded)
 
 	if (health < HUNGRY_TRESHOLD) {
-			log.Print("under hungry HUNGRY_TRESHOLD")
 			if(len(decoded.Board.Food) > 0) {
-			//log.Print("HUNTING AFTER LONGEST PATH!!!")
-				moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, SafeFoodHead(decoded))
-				if (nil == moveCoord) {
-					// food is not reachable... no problem.. follow Tail
-					moveCoord = AstarBoard(decoded, tailPos)
-					if(nil == moveCoord) {
-						// Food is not reachable... neither is my tail...
-						nextMove = getRandomValidMove(decoded)
+
+
+// there is food... enemy's and not DEAD DEAD (< 20?)
+				if (len(enemyHeadPosList) > 0 && health > 20) {
+					//easy enemy's to eat!!!
+					if (nil != AstarBoard(decoded, enemyHeadPosList[0])) {
+						moveCoord = AstarBoard(decoded, enemyHeadPosList[0])
 					}
 				} else {
-
-					if (isSafe(moveCoord[1], decoded)) {
-						// safe move.
-						nextMove = Heading(headPos, moveCoord[1])
-					} else {
-						// panic... getRandomValidMove
-						log.Print("PANIC!!! NO VALID MOVE.")
-						nextMove = getRandomValidMove(decoded)
-					}
-
-				}
-
-
-/*				if (isSafe(moveCoord[1], decoded)) {
-					//log.Print("FoodMove is safe but is there a route to tail from there???")
-					// if so, let's move there... if not... let's just go to my tail...
-					nextMove = Heading(headPos, moveCoord[1])
-				} else {
-					log.Print("Food is FATAL... other move CHASING TAIL")
-
-					nextMove = getRandomValidMove(decoded)
-
-					if (nil != AstarBoard(decoded, tailPos)) {
+					// NO ENEMY's
+					log.Print("No targets lets eat!")
+					moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, SafeFoodHead(decoded))
+					if (nil == moveCoord) {
+						// food is not reachable... no problem.. follow Tail
 						moveCoord = AstarBoard(decoded, tailPos)
-						if (isNodeOnBoard(moveCoord[1]) && isFree(moveCoord[1], decoded)) {
-							//Tail was Safe...
-							log.Print("Food was fatal, chasing tail")
-							nextMove = Heading(headPos, moveCoord[1])
+						if(nil == moveCoord) {
+							// Food is not reachable... neither is my tail...
+							nextMove = getRandomValidMove(decoded)
 						}
+					} else {
+						if (isSafe(moveCoord[1], decoded)) {
+							// safe move.
+							nextMove = Heading(headPos, moveCoord[1])
+						} else {
+							// panic... getRandomValidMove
+							log.Print("PANIC!!! NO VALID MOVE.")
+							nextMove = getRandomValidMove(decoded)
+						}
+
 					}
 				}
-*/
 
 			} else {
-				// NO FOOD!!!
-				moveCoord = AstarBoard(decoded, tailPos)
+				// NO FOOD!!! hunt?
+				if (len(enemyHeadPosList) > 0) {
+					//easy enemy's to eat!!!
+					if (nil != AstarBoard(decoded, enemyHeadPosList[0])) {
+						moveCoord = AstarBoard(decoded, enemyHeadPosList[0])
+					}
+				} else {
+					// no enemy? chase tail
+					moveCoord = AstarBoard(decoded, tailPos)
+				}
+
 				if (nil != moveCoord) {
 					if (isNodeOnBoard(moveCoord[1]) && isFree(moveCoord[1], decoded)) {
 						nextMove = Heading(headPos, moveCoord[1])
@@ -239,17 +236,21 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
 	} else {
 		// I'm not hungry... or there is no food...
+		// Let's hunt!
+		if (len(enemyHeadPosList) > 0) {
+			//easy enemy's to eat!!!
+			if (nil != AstarBoard(decoded, enemyHeadPosList[0])) {
+				log.Print("SHORT PATH TO MY ENEMY... LET's GO")
+				moveCoord = AstarBoard(decoded, enemyHeadPosList[0])
+			}
+		} else {
 
-				// if there is a safe move... take THAT!
-				//if ("no" != newPossibleMoves(decoded)) {
-				//log.Print("Took the newPossibleMoves")
-				//nextMove = newPossibleMoves(decoded)
-				//}
-
-		if (nil != AstarBoard(decoded, tailPos)) {
-			log.Print("there is a shortPath To my tail...")
-			moveCoord = LongestPath(decoded, tailPos)
+			if (nil != AstarBoard(decoded, tailPos)) {
+				log.Print("No Easy Enemy's...")
+				moveCoord = LongestPath(decoded, tailPos)
+			}
 		}
+
 
 		if (nil == moveCoord) {
 			log.Print("LONGEST PATH to TAIL NOT FOUND... DEAD?")
@@ -296,6 +297,18 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
 // see if i can attach these methods to the struct Snake or something..
 // func (target Snake) Head() Coord { return target.Body[0] }
+
+func getEnemyHeadPos(game SnakeRequest) []Coord {
+		coordList := make([]Coord, 0)
+		snakeList := game.Board.Snakes
+		 for i := 0; i < len(snakeList); i++ {
+				 if ( snakeList[i].ID != game.You.ID && len(snakeList[i].Body) <= len(game.You.Body) ) {
+					 // if the snake is not you and smaller.. it's food
+					 coordList = append(coordList, snakeList[i].Body[0])
+				 }
+		 }
+		 return coordList
+}
 
 func getHeadPos(target Snake) Coord {
 	body := target.Body
@@ -522,9 +535,10 @@ func shuffle(src []string) []string {
 
 
 	func isSafe(point Coord, game SnakeRequest) bool {
-		if (!isNodeOnBoard(point)) {
-			return false
-		}
+		// Let's do suicide instead ... do not check if it's on the board...
+		// if (!isNodeOnBoard(point)) {
+		//	return false
+		// }
 
 		snakeList := game.Board.Snakes
 		 for i := 0; i < len(snakeList); i++ {
