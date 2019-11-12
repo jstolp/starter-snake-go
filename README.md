@@ -21,6 +21,11 @@ Hamilton path still needed.
 
 ## Changelog
 
+
+### v0.6.0 (2019-11-12)
+- Tagged before Changes
+47. jstolp / GoPofAdderGames 37.58
+
 ### v0.5.5 (2019-11-09)
 39. 37.16 (11-11-2019)
 32. jstolp / GoPofAdder Pofadder 38.79 ranking before LONGEST PATH
