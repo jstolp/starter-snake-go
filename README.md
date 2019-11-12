@@ -21,6 +21,10 @@ Hamilton path still needed.
 
 ## Changelog
 
+### v0.8.0 (2019-11-12)
+
+- Added "HeadHunterZZZ" capability (Shortest Path to FOOD ENEMY... let's go!)
+Agressive snake.
 
 ### v0.6.0 (2019-11-12)
 - Tagged before Changes
@@ -35,7 +39,7 @@ Hamilton path still needed.
 
 v0.5.1 (adjusted number of snakes to hungry Threshold) testing:
 
---> BattleSnakeRank before commit: 2019-11-06: #26. jstolp / GoPofAdder - 38.87 points 
+--> BattleSnakeRank before commit: 2019-11-06: #26. jstolp / GoPofAdder - 38.87 points
 
 
 v0.5
