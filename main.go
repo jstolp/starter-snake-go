@@ -17,7 +17,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "9000"
+		port = "9009"
 	}
 
 	// Add filename into logging messages, and MICO SECS
