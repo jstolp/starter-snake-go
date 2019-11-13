@@ -178,15 +178,15 @@ func Move(res http.ResponseWriter, req *http.Request) {
 			if(len(decoded.Board.Food) > 0) {
 
 
-// there is food... enemy's and not DEAD DEAD (< 20?)
-				if (len(enemyHeadPosList) > 0 && health > 20) {
+				// there is food... But I'm the biggest snake alive and not under 40% health
+				if (len(enemyHeadPosList) > 0 && health > 50 && iAmTheBiggestSnakeAlive(decoded)) {
 					//easy enemy's to eat!!!
 					if (nil != AstarBoard(decoded, enemyHeadPosList[0])) {
 						moveCoord = AstarBoard(decoded, enemyHeadPosList[0])
 					}
 				} else {
 					// NO ENEMY's
-					log.Print("No targets lets eat!")
+					log.Print("No targets... i'm too hungry, or i'm not the biggest snake")
 					moveCoord = Astar(boardHeight, boardWidth, me, enemySnakes, SafeFoodHead(decoded))
 					if (nil == moveCoord) {
 						// food is not reachable... no problem.. follow Tail
@@ -296,8 +296,20 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	})
 }
 
-// see if i can attach these methods to the struct Snake or something..
-// func (target Snake) Head() Coord { return target.Body[0] }
+/*
+Only go in for the kill (La Roux... ;-)
+If i'm the biggest alive, else eat food
+*/
+func iAmTheBiggestSnakeAlive(game SnakeRequest) bool {
+		biggest := true
+		 for i := 0; i < len(snakeList); i++ {
+				 if (snakeList[i].ID != game.You.ID && len(snakeList[i].Body) >= len(game.You.Body) ) {
+					 // if a snake is equal or bigger... i'm not the biggest!
+					 biggest = false
+				 }
+		 }
+		 return biggest
+}
 
 func getEnemyHeadPos(game SnakeRequest) []Coord {
 		coordList := make([]Coord, 0)
