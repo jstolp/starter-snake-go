@@ -1,6 +1,10 @@
 # Pofadder
 
-De Gewone (Domme) PofAdder x
+Go-Pofadder! (Team: DutchViper)
+
+## Bugs
+
+- When food spawns in a corner i.e. (0,0),(10,0),(0,10),(10,10) something bugs out and i'll commit suicide... (OOPS)
 
 ## roadmap
 
