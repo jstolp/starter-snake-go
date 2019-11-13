@@ -25,6 +25,13 @@ Hamilton path still needed.
 
 ## Changelog
 
+### v0.x.x
+
+- Fix foodbug?
+
+ranking 2019-11-13: #30 - 42.13
+
+
 ### v0.8.0 (2019-11-12)
 
 - Added "HeadHunterZZZ" capability (Shortest Path to FOOD ENEMY... let's go!)
