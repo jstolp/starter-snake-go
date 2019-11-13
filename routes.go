@@ -302,8 +302,8 @@ If i'm the biggest alive, else eat food
 */
 func iAmTheBiggestSnakeAlive(game SnakeRequest) bool {
 		biggest := true
-		 for i := 0; i < len(snakeList); i++ {
-				 if (snakeList[i].ID != game.You.ID && len(snakeList[i].Body) >= len(game.You.Body) ) {
+		 for i := 0; i < len(game.Board.Snakes); i++ {
+				 if (game.Board.Snakes[i].ID != game.You.ID && len(game.Board.Snakes[i].Body) >= len(game.You.Body) ) {
 					 // if a snake is equal or bigger... i'm not the biggest!
 					 biggest = false
 				 }
