@@ -8,6 +8,13 @@ Go-Pofadder! (Team: DutchViper)
 
 ## roadmap
 
+### Tournament day 2
+
+- https://en.m.wikipedia.org/wiki/Flood_fill
+
+
+### misc
+
 https://github.com/maximelamure/algorithms/blob/master/README.md
 
 Hamilton Path.
