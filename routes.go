@@ -89,7 +89,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	tailPos = getTailPos(me)
 	enemySnakes := len(decoded.Board.Snakes) - 1
 	enemyHeadPosList := getEnemyHeadPos(decoded)
-	foodList := SafeFoodHead(decoded)
+	//foodList := SafeFoodHead(decoded)
 
 	validMoves := len(getPossibleMoves(decoded))
 
@@ -114,13 +114,10 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
 			} else {
 				// FOOD!!!
-				if ( len(decoded.Board.Food) > 0 ) {
-					log.Print("GET FOOD! NOT THE BIGGEST! ")
-					if (foodList != nil) {
-						moveCoord = AstarBoard(decoded, foodList[0])
-					}
-				} else {
-					log.Print("no food ")
+					if (isThereSafeFood(decoded)) {
+						moveCoord = AstarBoard(decoded, SafeFoodHead(decoded))
+					} else {
+					log.Print("no SAFE ... food")
 					// NO FOOD...
 					moveCoord = AstarBoard(decoded, tailPos)
 					// still chaseTail
@@ -131,8 +128,8 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		// Head or Tail Food...? What's best?
 		// BUG: INDEX OUT OF RANGE... Maybe food is not safe
 		//if(SafeFoodHead(decoded))
-		if (foodList != nil) {
-			moveCoord = AstarBoard(decoded, foodList[0])
+		if (isThereSafeFood(decoded)) {
+			moveCoord = AstarBoard(decoded, SafeFoodHead(decoded))
 		}
 		//moveCoord = AstarBoard(decoded, SafeFoodTail(decoded))
 		if moveCoord == nil {
@@ -249,14 +246,26 @@ func SafeFoodTail(req SnakeRequest) Coord {
 	return safeFood
 }
 //safeClosestFood
-func SafeFoodHead(req SnakeRequest) []Coord {
+
+func isThereSafeFood(game SnakeRequest) bool {
+	foodArray := game.Board.Food
+	if (0 == len(foodArray)) {
+		// no food. no safe food.
+		return false
+	}
+	for i := 0; i < len(foodArray); i++ {
+			if (isSafe(foodArray[i], game) && countEscapeRoutesFromCoord(foodArray[i], game) > 1) {
+				// there is safe food...
+				return true
+			}
+	}
+
+	return false
+}
+
+func SafeFoodHead(req SnakeRequest) Coord {
 	You := req.You.Body[0]
 	foodArray := req.Board.Food
-	safeFoodList := make([]Coord, 0)
-	// BUG... can be called without food... return nill?
-	if (len(foodArray) == 0) {
-		return nil
-	}
 
 	var safeFoodDist = Dist(foodArray[0], You)
 	var safeFood = foodArray[0]
@@ -268,18 +277,12 @@ func SafeFoodHead(req SnakeRequest) []Coord {
 			if (isSafe(foodArray[i], req) && countEscapeRoutesFromCoord(foodArray[i], req) > 1) {
 				//var safeFood = foodArray[0] // do i want the closest food?
 				safeFood = foodArray[i] // this is the closest food
-				safeFoodList = append(safeFoodList, safeFood)
 				safeFoodDist = Dist(foodArray[i], You)
 			}
 		}
 	}
 
-	if (len(safeFoodList) == 0) {
-		// no safe food..
-		return nil
-	}
-
-	return safeFoodList
+	return safeFood
 }
 
 
