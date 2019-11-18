@@ -102,8 +102,8 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	// above hungry? above  chaise tail! (Set this low maybe? i used to do 90... but FOOD == DANGER)
 	if (decoded.You.Health > HUNGRY_TRESHOLD || !iAmTheBiggestSnakeAlive(decoded) )  && ( len(decoded.You.Body) >= 4 || len(decoded.Board.Food) == 0 ) {
 
-			if ( iAmTheBiggestSnakeAlive(decoded)) {
-				log.Print("Biggest Snake Alive...")
+			if ( iAmTheBiggestSnakeAlive(decoded) && enemySnakes > 0) {
+				log.Print("Biggest Snake Alive... and there are enemies!")
 				if ( nil != AstarBoard(decoded, enemyHeadPosList[0]) ) {
 					log.Print("In for the kill...")
 					moveCoord = AstarBoard(decoded, enemyHeadPosList[0])
