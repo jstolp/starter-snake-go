@@ -32,13 +32,15 @@ Hamilton path still needed.
 
 ## Changelog
 
-### v0.x.x
+### v0.9.0 [Beta] - Back to Basics...
 
-- Fix foodbug?
+Back to Basics... Boring minimal stuff...
 
-ranking 2019-11-13: #30 - 42.13
+37/60 - 41 points... let's improve!
 
 
+### v0.8.1 (2019-11-16)
+Tournament Day...
 ### v0.8.0 (2019-11-12)
 
 - Added "HeadHunterZZZ" capability (Shortest Path to FOOD ENEMY... let's go!)
