@@ -88,13 +88,10 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	headPos = decoded.You.Body[0]
 	tailPos = getTailPos(me)
 	enemySnakes := len(decoded.Board.Snakes) - 1
-	validMoves := len(getPossibleMoves(decoded))
+	enemyHeadPosList := getEnemyHeadPos(decoded)
 
-	totalSnakeLength := 0
-	for _, snake := range decoded.Board.Snakes {
-		totalSnakeLength += len(snake.Body)
-	}
-	averageSnakeLength := totalSnakeLength / len(decoded.Board.Snakes)
+
+	validMoves := len(getPossibleMoves(decoded))
 
 	//log.Println
 	if (nil == moveCoord) {
@@ -103,9 +100,31 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// above hungry? above  chaise tail! (Set this low maybe? i used to do 90... but FOOD == DANGER)
-	if decoded.You.Health > HUNGRY_TRESHOLD && len(decoded.You.Body) >= 4 || len(decoded.Board.Food) == 0 {
-		// Am i bigger than the rest? (len(decoded.You.Body) >= averageSnakeLength (roundUp)
-		moveCoord = AstarBoard(decoded, tailPos)
+	if (decoded.You.Health > HUNGRY_TRESHOLD || !iAmTheBiggestSnakeAlive(decoded) )  && ( len(decoded.You.Body) >= 4 || len(decoded.Board.Food) == 0 ) {
+
+			if ( iAmTheBiggestSnakeAlive(decoded)) {
+				log.Print("Biggest Snake Alive...")
+				if ( nil != AstarBoard(decoded, enemyHeadPosList[0]) ) {
+					log.Print("In for the kill...")
+					moveCoord = AstarBoard(decoded, enemyHeadPosList[0])
+				} else {
+					log.Print("Wanted to kill... but...")
+					moveCoord = AstarBoard(decoded, tailPos)
+				}
+
+			} else {
+				// FOOD!!!
+				if ( len(decoded.Board.Food) > 0 ) {
+					log.Print("GET FOOD! NOT THE BIGGEST! ")
+					moveCoord = AstarBoard(decoded, SafeFoodHead(decoded))
+				} else {
+					log.Print("no food ")
+					// NO FOOD...
+					moveCoord = AstarBoard(decoded, tailPos)
+					// still chaseTail
+				}
+			}
+
 	} else {
 		// Head or Tail Food...? What's best?
 		moveCoord = AstarBoard(decoded, SafeFoodHead(decoded))
@@ -117,9 +136,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if AstarBoard(decoded, tailPos) == nil {
-		//moveCoord = algorithm.Astar(decoded.Board.Height, decoded.Board.Width, decoded.You, decoded.Board.Snakes, algorithm.ChaseTail(decoded.You.Body))
-		//moveCoord = AstarBoard(decoded, tailPos)
-		//Tail not reachable...
+		log.Print("TAIL NOT REACHABLE...") // Should do a fillMove (or should've done it the previous move...)
 	}
 
 	if (nil != moveCoord) {
@@ -161,7 +178,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		log.Print("I'm dead this round... 0 valid moves")
 	}
 
-	fmt.Print("T " + strconv.Itoa(turn) + " H:" + strconv.Itoa(health) + " E:" + strconv.Itoa(enemySnakes) + " ("+ strconv.Itoa(averageSnakeLength) + ") Move: " + nextMove + "\n")
+	fmt.Print("T " + strconv.Itoa(turn) + " H:" + strconv.Itoa(health) + " E:" + strconv.Itoa(enemySnakes) + " Move: " + nextMove + "\n")
 
 	respond(res, MoveResponse{
 		Move: nextMove,
@@ -235,7 +252,8 @@ func SafeFoodHead(req SnakeRequest) Coord {
 	for i := 0; i < len(foodArray); i++ {
 		if Dist(foodArray[i], You) < safeFoodF {
 
-			if (!isSafe(foodArray[i], req) || countEscapeRoutesFromCoord(foodArray[i], req) > 1){
+			// only return safeFood && 2 escape routes...
+			if (isSafe(foodArray[i], req) && countEscapeRoutesFromCoord(foodArray[i], req) > 1) {
 				safeFood = foodArray[i]
 				safeFoodF = Dist(foodArray[i], You)
 			}
@@ -320,10 +338,11 @@ func getRandomValidMove(game SnakeRequest) string {
 
 			if (false == NodeBlocked(coord, enemySnakes)) {
 				dir := Heading(headPos, coord)
-				if(game.You.Health > 99 && dist(headPos, tailPos) == 1 && dir == goToDir(headPos, tailPos)) {
-					log.Print("skipping " + dir + " as it would crash into tail")
-					continue
-				}
+				//if(game.You.Health > 99 && dist(headPos, tailPos) == 1 && dir == goToDir(headPos, tailPos)) {
+				//	log.Print("skipping " + dir + " as it would crash into tail")
+					// This is Incorrect i guess...
+				//	continue
+				//}
 
 				if (false == isMoveOOB(headPos, dir)) {
 					log.Println("false is move OOB")
