@@ -89,7 +89,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	tailPos = getTailPos(me)
 	enemySnakes := len(decoded.Board.Snakes) - 1
 	enemyHeadPosList := getEnemyHeadPos(decoded)
-
+	foodList := SafeFoodHead(decoded)
 
 	validMoves := len(getPossibleMoves(decoded))
 
@@ -116,7 +116,9 @@ func Move(res http.ResponseWriter, req *http.Request) {
 				// FOOD!!!
 				if ( len(decoded.Board.Food) > 0 ) {
 					log.Print("GET FOOD! NOT THE BIGGEST! ")
-					moveCoord = AstarBoard(decoded, SafeFoodHead(decoded))
+					if (foodList != nil) {
+						moveCoord = AstarBoard(decoded, foodList[0])
+					}
 				} else {
 					log.Print("no food ")
 					// NO FOOD...
@@ -127,7 +129,11 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
 	} else {
 		// Head or Tail Food...? What's best?
-		moveCoord = AstarBoard(decoded, SafeFoodHead(decoded))
+		// BUG: INDEX OUT OF RANGE... Maybe food is not safe
+		//if(SafeFoodHead(decoded))
+		if (foodList != nil) {
+			moveCoord = AstarBoard(decoded, foodList[0])
+		}
 		//moveCoord = AstarBoard(decoded, SafeFoodTail(decoded))
 		if moveCoord == nil {
 			//moveCoord = algorithm.Astar(decoded.Board.Height, decoded.Board.Width, decoded.You, decoded.Board.Snakes, algorithm.ChaseTail(decoded.You.Body))
@@ -227,13 +233,13 @@ func SafeFoodTail(req SnakeRequest) Coord {
 	You := getTailPos(req.You)
 	foodArray := req.Board.Food
 	var safeFood = foodArray[0]
-	var safeFoodF = Dist(foodArray[0], You)
+	var safeFoodDist = Dist(foodArray[0], You)
 
 	for i := 0; i < len(foodArray); i++ {
-		if Dist(foodArray[i], You) < safeFoodF {
+		if Dist(foodArray[i], You) < safeFoodDist {
 			if (countEscapeRoutesFromCoord(foodArray[i], req) > 1) {
 				safeFood = foodArray[i]
-				safeFoodF = Dist(foodArray[i], You)
+				safeFoodDist = Dist(foodArray[i], You)
 			} else {
 				log.Print("TAIL food was not safe... skipping");
 			}
@@ -243,24 +249,37 @@ func SafeFoodTail(req SnakeRequest) Coord {
 	return safeFood
 }
 //safeClosestFood
-func SafeFoodHead(req SnakeRequest) Coord {
+func SafeFoodHead(req SnakeRequest) []Coord {
 	You := req.You.Body[0]
 	foodArray := req.Board.Food
+	safeFoodList := make([]Coord, 0)
+	// BUG... can be called without food... return nill?
+	if (len(foodArray) == 0) {
+		return nil
+	}
+
+	var safeFoodDist = Dist(foodArray[0], You)
 	var safeFood = foodArray[0]
-	var safeFoodF = Dist(foodArray[0], You)
 
 	for i := 0; i < len(foodArray); i++ {
-		if Dist(foodArray[i], You) < safeFoodF {
+		if Dist(foodArray[i], You) < safeFoodDist {
 
 			// only return safeFood && 2 escape routes...
 			if (isSafe(foodArray[i], req) && countEscapeRoutesFromCoord(foodArray[i], req) > 1) {
-				safeFood = foodArray[i]
-				safeFoodF = Dist(foodArray[i], You)
+				//var safeFood = foodArray[0] // do i want the closest food?
+				safeFood = foodArray[i] // this is the closest food
+				safeFoodList = append(safeFoodList, safeFood)
+				safeFoodDist = Dist(foodArray[i], You)
 			}
 		}
 	}
 
-	return safeFood
+	if (len(safeFoodList) == 0) {
+		// no safe food..
+		return nil
+	}
+
+	return safeFoodList
 }
 
 
