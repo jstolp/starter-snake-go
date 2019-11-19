@@ -20,9 +20,9 @@ but the other side has 3 steps available (only never grows) so that's something 
 
 ## Changelog
 
-### v0.9.0 [Beta] - Back to Basics...
+### [Upcoming Release] v0.9.0 Tournament day one
 
-2019-11-19:
+### v0.8.5 (2019-11-19) [Beta] - Back to Basics...
 
 - Changed path to Longest Path To tail when 4 length or less... (MORE MOVEMENT in EARLY PHASE)
 
