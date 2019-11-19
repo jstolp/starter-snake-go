@@ -34,7 +34,12 @@ Hamilton path still needed.
 
 ### v0.9.0 [Beta] - Back to Basics...
 
-2019-11-19: updated safeFood Logic...( #25 / 57 @ 43.48 points)
+2019-11-19:
+
+19:30 CEST
+Check if a bigger snake is making a claim for it's food... else it's not safe.
+
+updated safeFood Logic...( #25 / 57 @ 43.48 points)
 FOOD == DANGER (for sure with a multi-snake party... let's avoid that...)
 
 Back to Basics... Boring minimal stuff...

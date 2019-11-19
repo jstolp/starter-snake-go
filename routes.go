@@ -256,14 +256,13 @@ func isThereSafeFood(game SnakeRequest) bool {
 		// Then any Food is OK! (i'm not Undefined Behavior).
 		if ItsMyFood(foodArray[0], game) {
 			return true
-		} else {
-			return false
 		}
-		
 	}
 
+
+
 	for i := 0; i < len(foodArray); i++ {
-			if (isSafe(foodArray[i], game) && countEscapeRoutesFromCoord(foodArray[i], game) > 1) {
+			if (ItsMyFood(foodArray[i], game) && isSafe(foodArray[i], game) && countEscapeRoutesFromCoord(foodArray[i], game) > 1) {
 				// there is safe food...
 				return true
 			}
@@ -272,18 +271,23 @@ func isThereSafeFood(game SnakeRequest) bool {
 	return false
 }
 
-func SafeFoodHead(req SnakeRequest) Coord {
-	You := req.You.Body[0]
-	foodArray := req.Board.Food
+func SafeFoodHead(game SnakeRequest) Coord {
+	You := game.You.Body[0]
+	foodArray := game.Board.Food
 
 	var safeFoodDist = Dist(foodArray[0], You)
 	var safeFood = foodArray[0]
 
 	for i := 0; i < len(foodArray); i++ {
+		if(ItsMyFood(foodArray[i], game)) {
+			safeFood = foodArray[i] // this is the closest food to ME!
+			safeFoodDist = Dist(foodArray[i], You)
+		}
+
 		if Dist(foodArray[i], You) < safeFoodDist {
 
 			// only return safeFood && 2 escape routes...
-			if (isSafe(foodArray[i], req) && countEscapeRoutesFromCoord(foodArray[i], req) > 1) {
+			if (isSafe(foodArray[i], game) && countEscapeRoutesFromCoord(foodArray[i], game) > 1) {
 				//var safeFood = foodArray[0] // do i want the closest food?
 				safeFood = foodArray[i] // this is the closest food
 				safeFoodDist = Dist(foodArray[i], You)
@@ -300,8 +304,9 @@ func ItsMyFood(foodCoord Coord, game SnakeRequest) bool {
 		myDist := dist(game.You.Body[0], foodCoord)
 		 for i := 0; i < len(snakeList); i++ {
 				 if ( snakeList[i].ID != game.You.ID ) {
-					 if (dist(foodCoord, snakeList[i].Body[0]) <= myDist ) {
-						 // if a enemy is closer or the same distance...
+					 if ( dist(foodCoord, snakeList[i].Body[0]) < myDist || len(game.You.Body) <= len(snakeList[i].Body) && dist(foodCoord, snakeList[i].Body[0]) <= myDist )  {
+						 // if a enemy is a step closer... it's not my food...
+						  // neither claims from bigger snakes (same distance... let's not fight for that food...)
 						 return false
 					 }
 				 }
