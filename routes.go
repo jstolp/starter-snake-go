@@ -104,8 +104,8 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	// above hungry? above  chaise tail! (Set this low maybe? i used to do 90... but FOOD == DANGER)
 	if (decoded.You.Health > HUNGRY_TRESHOLD || !iAmTheBiggestSnakeAlive(decoded) )  && ( len(decoded.You.Body) >= 4 || len(decoded.Board.Food) == 0 ) {
 
-			if ( iAmTheBiggestSnakeAlive(decoded) && enemySnakes > 0) {
-				log.Print("Biggest Snake Alive... and there are enemies!")
+			if ( iAmTheBiggestSnakeAlive(decoded) && enemySnakes > 0 && !isThereSafeFood(decoded)) {
+				log.Print("Biggest Snake Alive... and there are enemies! And No Easy Food")
 				if ( nil != AstarBoard(decoded, enemyHeadPosList[0]) ) {
 					log.Print("In for the kill...")
 					moveCoord = AstarBoard(decoded, enemyHeadPosList[0])
@@ -121,7 +121,12 @@ func Move(res http.ResponseWriter, req *http.Request) {
 					} else {
 					log.Print("no SAFE ... food")
 					// NO FOOD...
-					moveCoord = AstarBoard(decoded, tailPos)
+					if (len(decoded.You.Body) <= 4) {
+						// too small? WALK! LONG PATH
+							moveCoord = LongestPath(decoded, tailPos)
+					} else {
+							moveCoord = AstarBoard(decoded, tailPos)
+					}
 					// still chaseTail
 				}
 			}
@@ -136,7 +141,12 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		//moveCoord = AstarBoard(decoded, SafeFoodTail(decoded))
 		if moveCoord == nil {
 			//moveCoord = algorithm.Astar(decoded.Board.Height, decoded.Board.Width, decoded.You, decoded.Board.Snakes, algorithm.ChaseTail(decoded.You.Body))
-			moveCoord = AstarBoard(decoded, tailPos)
+			if (len(decoded.You.Body) <= 4) {
+				// too small? WALK! LONG PATH
+					moveCoord = LongestPath(decoded, tailPos)
+			} else {
+					moveCoord = AstarBoard(decoded, tailPos)
+			}
 		}
 	}
 
@@ -318,37 +328,32 @@ func ItsMyFood(foodCoord Coord, game SnakeRequest) bool {
 func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
 		// doing a 180 is never safe, so check for that...
 		flipDir := invDir(currentDir)
-		if(flipDir == targetDir) {
-			log.Print("The move is " + targetDir + "but in going " + currentDir + "That would be fatal...\n")
+		if (flipDir == targetDir) {
+			// log.Print("The move is " + targetDir + "but in going " + currentDir + "That would be fatal...\n")
 			return true
 		}
 		// check if a move is NOT_OUT_OF_BOUNDS (hit a wall) WALL SNAKE
 		if (isMoveOOB(headPos, targetDir)) {
-			log.Print("Next Move is Fatal because of a BOUNDARY " + targetDir + "\n")
+		//	log.Print("Next Move is Fatal because of a BOUNDARY " + targetDir + "\n")
 			return true
 		}
 
-		// if dist to my own tail is 1, and i'm going in the same direction...
-		// i'll die...
-		// THIS TURNS OUT TO BE NOT TRUE! (You can pass your own tail on 1 dist (next to it....7))
-		//if (dist(headPos, tailPos) == 1 && targetDir == goToDir(headPos, tailPos)) {
-		//	log.Print("CRASHING INTO MY OWN TAIL IN ... 3 . 2.. .1.. no... next MOVE ahhaah \n\n")
-		//	log.Print()
-		//	return true
-		//}
-
-		//log.Print("The move " + targetDir + " is safe...\n")
 		return false
 }
 
 func newPossibleMoves(game SnakeRequest) string {
 	allCoords := SurroundingCoordinates(game.You.Body[0])
+	onlyOption := "no"
 	for _,coord := range allCoords {
 			if (isSafe(coord, game)) {
+				// if it's safe, let's GO
 				return goToDir(game.You.Body[0], coord)
+			} else if (isNodeOnBoard(coord) && !NodeBlockedExceptTail(coord,game.Board.Snakes) ) {
+				onlyOption = goToDir(game.You.Body[0], coord)
+				log.Print("My only option is... " + onlyOption)
 			}
 		}
-		return "no"
+		return onlyOption
 }
 /**
 returns list of coords that are possible
