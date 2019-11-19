@@ -32,7 +32,7 @@ var boardHeight int = 0;
 var boardWidth int = 0;
 
 /* SNAKE SETUP */
-var HUNGRY_TRESHOLD  int = 40; // defines when snake goes looking for food.
+var HUNGRY_TRESHOLD int = 40; // defines when snake goes looking for food.
 
 func Start(res http.ResponseWriter, req *http.Request) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
@@ -50,10 +50,7 @@ func Start(res http.ResponseWriter, req *http.Request) {
 
 	fmt.Print("Start Pos: " + strconv.Itoa(headPos.X) + "," + strconv.Itoa(headPos.Y))
 
-	//log.Print("Should Be 2... " + strconv.Itoa( countOpenAjdacents(Coord{0,0}))
- //log.Print("would be 2: " + strconv.Itoa(countOpenAjdacents(countOpenAjdacents(topLeft))))
- //log.Print("would be 4: " + strconv.Itoa(countOpenAjdacents(countOpenAjdacents(Coord{1,1}))))
- //log.Print("would be 3: " + strconv.Itoa(countOpenAjdacents(countOpenAjdacents(Coord{4,0}))))
+	log.Print("Should Be 2... " + strconv.Itoa(len(getOpenAjdacentNodes(Coord{0,0}))))
 
 
 	if (numOfStartingSnakes == 1) {
@@ -87,7 +84,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	health = me.Health
 	headPos = decoded.You.Body[0]
 	tailPos = getTailPos(me)
-	enemySnakes := len(decoded.Board.Snakes) - 1
+	enemySnakes = len(decoded.Board.Snakes) - 1
 	enemyHeadPosList := getEnemyHeadPos(decoded)
 	//foodList := SafeFoodHead(decoded)
 
@@ -97,6 +94,11 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	if (nil == moveCoord) {
 		// food is not reachable... no problem.. follow Tail
 		moveCoord = AstarBoard(decoded, tailPos)
+	}
+
+	if (validMoves == 0) {
+		// DEAD!
+		log.Print("I'm dead this round... 0 valid moves")
 	}
 
 	// above hungry? above  chaise tail! (Set this low maybe? i used to do 90... but FOOD == DANGER)
@@ -154,12 +156,9 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		// Path to tail, or food or otherwise not found! fallback
 		// MoveCoord was 0
 		coordList := getPossibleMoves(decoded)
-		if (!isSafe(coordList[0], decoded)) {
-				log.Print("404, fallback WAS NOT SAFE!!!")
-		} else {
+		if (len(coordList) >= 1 && isSafe(coordList[0], decoded)) {
 			nextMove = goToDir(headPos, coordList[0])
 		}
-
 
 	}
 
@@ -176,12 +175,9 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		log.Print(nextMove)
 	}
 
-	if (validMoves == 0) {
-		// easy let's move that way
-		log.Print("I'm dead this round... 0 valid moves")
-	}
+	//mapToGrid(decoded)
 
-	fmt.Print("T " + strconv.Itoa(turn) + " H:" + strconv.Itoa(health) + " E:" + strconv.Itoa(enemySnakes) + " Move: " + nextMove + "\n")
+	fmt.Print("T " + strconv.Itoa(decoded.Turn) + " H:" + strconv.Itoa(health) + " E:" + strconv.Itoa(enemySnakes) + " Move: " + nextMove + "\n")
 
 	respond(res, MoveResponse{
 		Move: nextMove,
@@ -253,6 +249,19 @@ func isThereSafeFood(game SnakeRequest) bool {
 		// no food. no safe food.
 		return false
 	}
+
+	if ( 1 == len(foodArray) && iAmTheBiggestSnakeAlive(game) == false && len(game.Board.Snakes) > 2 && game.You.Health > 20 ) {
+		// More Than 2 is a party... let's avoid the last spick food
+		// if more then two snakes.. unless i'm under 20 health...
+		// Then any Food is OK! (i'm not Undefined Behavior).
+		if ItsMyFood(foodArray[0], game) {
+			return true
+		} else {
+			return false
+		}
+		
+	}
+
 	for i := 0; i < len(foodArray); i++ {
 			if (isSafe(foodArray[i], game) && countEscapeRoutesFromCoord(foodArray[i], game) > 1) {
 				// there is safe food...
@@ -285,6 +294,21 @@ func SafeFoodHead(req SnakeRequest) Coord {
 	return safeFood
 }
 
+// returns true, if you're head is the closest to the food of all the snakes.
+func ItsMyFood(foodCoord Coord, game SnakeRequest) bool {
+		snakeList := game.Board.Snakes
+		myDist := dist(game.You.Body[0], foodCoord)
+		 for i := 0; i < len(snakeList); i++ {
+				 if ( snakeList[i].ID != game.You.ID ) {
+					 if (dist(foodCoord, snakeList[i].Body[0]) <= myDist ) {
+						 // if a enemy is closer or the same distance...
+						 return false
+					 }
+				 }
+		 }
+		 // i am the closest snake to that food Coordinate
+		 return true
+}
 
 func isNextMoveFatal(me Snake, currentDir string, targetDir string) bool {
 		// doing a 180 is never safe, so check for that...
@@ -351,8 +375,7 @@ func getRandomValidMove(game SnakeRequest) string {
 
 
 	for _,coord := range allCoords {
-			if (isSafe(coord, game) && false == NodeBlocked(coord, enemySnakes)) {
-				// is isSafe correct U
+			if (isSafe(coord, game) && false == NodeBlockedExceptTail(coord, enemySnakes)) {
 				log.Print("Got the Most Optimal Route in random move...")
 				return Heading(headPos, coord)
 				// if we have a safe Move.. return that one, else... each one is as bad af them..
@@ -383,7 +406,7 @@ func getRandomValidMove(game SnakeRequest) string {
 	escapeRoutes := countEscapeRoutesFromCoord(headPos, game)
 	//dd(GetAdjacentCoords(headPos))
 	log.Print("escape routes: " + strconv.Itoa(escapeRoutes))
-	log.Print("new possbile: " + newPossibleMoves(game))
+	//log.Print("new possbile: " + newPossibleMoves(game))
 	return newPossibleMoves(game)
 	//return "invalid"
  	//return getAnyMove(game) // invalid move
@@ -599,6 +622,7 @@ func invDir(currentDir string) string {
 }
 
 /* Dist to function in steps (int) */
+// manhatten dist... snakes can't slither diagonally...
 func dist(a Coord, b Coord) int {
 	return int(math.Abs(float64(b.X-a.X)) + math.Abs(float64(b.Y-a.Y)))
 }

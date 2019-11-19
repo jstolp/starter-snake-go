@@ -34,6 +34,9 @@ Hamilton path still needed.
 
 ### v0.9.0 [Beta] - Back to Basics...
 
+2019-11-19: updated safeFood Logic...
+FOOD == DANGER (for sure with a multi-snake party... let's avoid that...)
+
 Back to Basics... Boring minimal stuff...
 
 37/60 - 41 points... let's improve!
