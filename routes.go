@@ -173,8 +173,6 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	}
 
 
-	//if(isSafe())
-
 	if (isNextMoveFatal(me, prevMove, nextMove)) {
 		log.Println("Next move (" + nextMove + ") was fatal... new move is: ")
 		nextMove = newPossibleMoves(decoded)
@@ -185,7 +183,20 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		log.Print(nextMove)
 	}
 
-	//mapToGrid(decoded)
+
+	if (validMoves == 2) {
+		log.Print("Let's test the new floodFill when doing 2 moves...")
+		// Let's check if there are both "Safe" next round...
+		// i.e. is a tail (but moving, since health > 99), so not blockedByTail...
+
+		//  both are valid in 1 move...
+		// but with one is best? (highest floodFill... is better? let's test)
+		// foreach validMoves as Move
+		// check number of nextMoves if reaches tail after 1 spot, then 99999 (for infinite)
+		// best floodFill everrrr because of moving to my own tail)
+		// move with highest score wins...
+		// if equal... then the current valid move stays unchanged
+	}
 
 	fmt.Print("T " + strconv.Itoa(decoded.Turn) + " H:" + strconv.Itoa(health) + " E:" + strconv.Itoa(enemySnakes) + " Move: " + nextMove + "\n")
 

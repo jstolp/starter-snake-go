@@ -10,7 +10,6 @@ import (
 )
 
 func TestOnlyCorrectMoveIsUp(t *testing.T) {
-  t.Skip("too hard")
 	var r io.Reader
 	r = strings.NewReader("{\"game\":{\"id\":\"only-valid-turn-is-up\"},\"turn\":195,\"board\":{\"height\":7,\"width\":7,\"food\":[{\"x\":6,\"y\":0},{\"x\":5,\"y\":1},{\"x\":6,\"y\":2},{\"x\":5,\"y\":0},{\"x\":4,\"y\":1},{\"x\":0,\"y\":0},{\"x\":4,\"y\":0},{\"x\":4,\"y\":3},{\"x\":4,\"y\":4},{\"x\":3,\"y\":6}],\"snakes\":[{\"id\":\"ce4df4c6-22ff-492d-818c-d86932fa5867\",\"name\":\"j\",\"health\":92,\"body\":[{\"x\":3,\"y\":2},{\"x\":4,\"y\":2},{\"x\":5,\"y\":2},{\"x\":5,\"y\":3},{\"x\":6,\"y\":3},{\"x\":6,\"y\":4},{\"x\":6,\"y\":5},{\"x\":6,\"y\":6},{\"x\":5,\"y\":6},{\"x\":4,\"y\":6},{\"x\":4,\"y\":5},{\"x\":3,\"y\":5},{\"x\":2,\"y\":5},{\"x\":1,\"y\":5},{\"x\":0,\"y\":5},{\"x\":0,\"y\":4},{\"x\":0,\"y\":3},{\"x\":0,\"y\":2},{\"x\":1,\"y\":2},{\"x\":1,\"y\":1},{\"x\":1,\"y\":0},{\"x\":2,\"y\":0},{\"x\":2,\"y\":1},{\"x\":2,\"y\":2},{\"x\":2,\"y\":3},{\"x\":1,\"y\":3},{\"x\":1,\"y\":4},{\"x\":2,\"y\":4},{\"x\":3,\"y\":4},{\"x\":3,\"y\":3}]}]},\"you\":{\"id\":\"ce4df4c6-22ff-492d-818c-d86932fa5867\",\"name\":\"j\",\"health\":92,\"body\":[{\"x\":3,\"y\":2},{\"x\":4,\"y\":2},{\"x\":5,\"y\":2},{\"x\":5,\"y\":3},{\"x\":6,\"y\":3},{\"x\":6,\"y\":4},{\"x\":6,\"y\":5},{\"x\":6,\"y\":6},{\"x\":5,\"y\":6},{\"x\":4,\"y\":6},{\"x\":4,\"y\":5},{\"x\":3,\"y\":5},{\"x\":2,\"y\":5},{\"x\":1,\"y\":5},{\"x\":0,\"y\":5},{\"x\":0,\"y\":4},{\"x\":0,\"y\":3},{\"x\":0,\"y\":2},{\"x\":1,\"y\":2},{\"x\":1,\"y\":1},{\"x\":1,\"y\":0},{\"x\":2,\"y\":0},{\"x\":2,\"y\":1},{\"x\":2,\"y\":2},{\"x\":2,\"y\":3},{\"x\":1,\"y\":3},{\"x\":1,\"y\":4},{\"x\":2,\"y\":4},{\"x\":3,\"y\":4},{\"x\":3,\"y\":3}]}}")
 
@@ -34,8 +33,8 @@ func TestOnlyCorrectMoveIsUp(t *testing.T) {
     }
 
     // only valid move is up (else in 3 moves we'll fail...
-    expected := `{"move":"up"}`
-    if rr.Body.String() != expected {
+    expected := "up"
+    if !strings.Contains(rr.Body.String(), expected) {
         t.Errorf("handler returned unexpected body: got %v expected %v",
             rr.Body.String(), expected)
     }
@@ -66,8 +65,8 @@ func TestNextNodeNoPathToTail(t *testing.T) {
             status, http.StatusOK)
     }
 
-    expected := `{"move":"right"}`
-    if rr.Body.String() != expected {
+    expected := "right"
+    if !strings.Contains(rr.Body.String(), expected) {
         t.Errorf("handler returned unexpected body: got %v expected %v",
             rr.Body.String(), expected)
     }
@@ -97,15 +96,14 @@ func TestOnlyMoveIsDown(t *testing.T) {
             status, http.StatusOK)
     }
 
-    expected := `{"move":"down"}`
-    if rr.Body.String() != expected {
+    expected := "down"
+    if !strings.Contains(rr.Body.String(), expected) {
         t.Errorf("handler returned unexpected body: got %v expected %v",
             rr.Body.String(), expected)
     }
 }
 
 func TestSmartMoveIsRight(t *testing.T) {
-	t.Skip("Hard logic move")
 	var r io.Reader
 	r = strings.NewReader("{\"game\":{\"id\":\"smart-move-is-right-hard-logic\"},\"turn\":18,\"board\":{\"height\":4,\"width\":4,\"food\":[{\"x\":3,\"y\":3},{\"x\":3,\"y\":1},{\"x\":3,\"y\":2},{\"x\":0,\"y\":3},{\"x\":3,\"y\":0},{\"x\":1,\"y\":3}],\"snakes\":[{\"id\":\"e387e7dc-901e-459f-9f48-f427e77444b1\",\"name\":\"j\",\"health\":100,\"body\":[{\"x\":2,\"y\":3},{\"x\":2,\"y\":2},{\"x\":2,\"y\":1},{\"x\":2,\"y\":0},{\"x\":1,\"y\":0},{\"x\":0,\"y\":0},{\"x\":0,\"y\":1},{\"x\":0,\"y\":2},{\"x\":1,\"y\":2},{\"x\":1,\"y\":1},{\"x\":1,\"y\":1}]}]},\"you\":{\"id\":\"e387e7dc-901e-459f-9f48-f427e77444b1\",\"name\":\"j\",\"health\":100,\"body\":[{\"x\":2,\"y\":3},{\"x\":2,\"y\":2},{\"x\":2,\"y\":1},{\"x\":2,\"y\":0},{\"x\":1,\"y\":0},{\"x\":0,\"y\":0},{\"x\":0,\"y\":1},{\"x\":0,\"y\":2},{\"x\":1,\"y\":2},{\"x\":1,\"y\":1},{\"x\":1,\"y\":1}]}}")
 
@@ -124,16 +122,14 @@ func TestSmartMoveIsRight(t *testing.T) {
             status, http.StatusOK)
     }
 
-    expected := `{"move": "right"}`
-    if rr.Body.String() != expected {
+    expected := "right"
+    if !strings.Contains(rr.Body.String(), expected) {
         t.Errorf("Handler returned the wrong move: got %v expected %v",
             rr.Body.String(), expected)
     }
 }
 
 func TestMoveIsLeftHardCase(t *testing.T) {
-
-	t.Skip("skip too hard")
 
 	var r io.Reader
 	r = strings.NewReader("{\"game\":{\"id\":\"answer-is-left\"},\"turn\":86,\"board\":{\"height\":7,\"width\":7,\"food\":[{\"x\":0,\"y\":0},{\"x\":0,\"y\":1},{\"x\":4,\"y\":6},{\"x\":1,\"y\":0},{\"x\":5,\"y\":2},{\"x\":5,\"y\":6},{\"x\":5,\"y\":0},{\"x\":3,\"y\":0},{\"x\":3,\"y\":2},{\"x\":0,\"y\":2}],\"snakes\":[{\"id\":\"629dd101-a2b1-4a45-a2f1-a9bd68d7a800\",\"name\":\"j\",\"health\":100,\"body\":[{\"x\":6,\"y\":0},{\"x\":6,\"y\":1},{\"x\":6,\"y\":2},{\"x\":6,\"y\":3},{\"x\":6,\"y\":4},{\"x\":5,\"y\":4},{\"x\":5,\"y\":3},{\"x\":4,\"y\":3},{\"x\":3,\"y\":3},{\"x\":2,\"y\":3},{\"x\":2,\"y\":4},{\"x\":1,\"y\":4},{\"x\":0,\"y\":4},{\"x\":0,\"y\":5},{\"x\":1,\"y\":5},{\"x\":1,\"y\":6},{\"x\":2,\"y\":6},{\"x\":2,\"y\":6}]}]},\"you\":{\"id\":\"629dd101-a2b1-4a45-a2f1-a9bd68d7a800\",\"name\":\"j\",\"health\":100,\"body\":[{\"x\":6,\"y\":0},{\"x\":6,\"y\":1},{\"x\":6,\"y\":2},{\"x\":6,\"y\":3},{\"x\":6,\"y\":4},{\"x\":5,\"y\":4},{\"x\":5,\"y\":3},{\"x\":4,\"y\":3},{\"x\":3,\"y\":3},{\"x\":2,\"y\":3},{\"x\":2,\"y\":4},{\"x\":1,\"y\":4},{\"x\":0,\"y\":4},{\"x\":0,\"y\":5},{\"x\":1,\"y\":5},{\"x\":1,\"y\":6},{\"x\":2,\"y\":6},{\"x\":2,\"y\":6}]}}")
@@ -158,8 +154,8 @@ func TestMoveIsLeftHardCase(t *testing.T) {
     }
 
     // only valid move is left
-    expected := `{"move": "left"}`
-    if rr.Body.String() != expected {
+    expected := "left"
+    if !strings.Contains(rr.Body.String(), expected) {
         t.Errorf("handler returned unexpected body: got %v expected %v",
             rr.Body.String(), expected)
     }
