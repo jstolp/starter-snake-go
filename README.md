@@ -8,26 +8,14 @@ Go-Pofadder! (Team: DutchViper)
 
 ## roadmap
 
+- Flood fill, in order to detect stupid moves in the future... https://en.m.wikipedia.org/wiki/Flood_fill
+(consider each move of an enemySnake a blocked tile, just as the walls, enemyHead+Body but not it's tail... unless it just ate (100 Health)!)
+Flood_fill the tiles both directions (usually you are on a tipping point, two directions still possible)
+Goto the one with the highest count (There is more room to wiggle here...)
+Allthough there are situations where a bigger count is not really correct. You could have one step indefinely (because you are chasing your tail)
+but the other side has 3 steps available (only never grows) so that's something to watch out for
+
 ### Tournament day 2
-
-- https://en.m.wikipedia.org/wiki/Flood_fill
-
-
-### misc
-
-https://github.com/maximelamure/algorithms/blob/master/README.md
-
-Hamilton Path.
-
-Zap (uber.org) logging
-
-answer this with source code: https://stackoverflow.com/questions/32999136/perfect-snake-ai
-
-https://en.m.wikipedia.org/wiki/A*_search_algorithm
-
-A* search Implemented.
-
-Hamilton path still needed.
 
 
 ## Changelog
@@ -36,7 +24,8 @@ Hamilton path still needed.
 
 2019-11-19:
 
-19:30 CEST
+- Changed path to Longest Path To tail when 4 length or less... (MORE MOVEMENT in EARLY PHASE)
+
 Check if a bigger snake is making a claim for it's food... else it's not safe.
 
 updated safeFood Logic...( #25 / 57 @ 43.48 points)
@@ -113,3 +102,16 @@ v0 - fork - 2019-02-20
 
 
 https://dave.cheney.net/practical-go/presentations/qcon-china.html
+
+
+### misc
+
+https://github.com/maximelamure/algorithms/blob/master/README.md
+
+Hamilton Path.
+
+Zap (uber.org) logging
+
+answer this with source code: https://stackoverflow.com/questions/32999136/perfect-snake-ai
+
+Hamilton path???
