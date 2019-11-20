@@ -13,7 +13,10 @@ Go-Pofadder! (Team: DutchViper)
 Flood_fill the tiles both directions (usually you are on a tipping point, two directions still possible)
 Goto the one with the highest count (There is more room to wiggle here...)
 Allthough there are situations where a bigger count is not really correct. You could have one step indefinely (because you are chasing your tail)
-but the other side has 3 steps available (only never grows) so that's something to watch out for
+but the other side has 3 steps available (only never grows) so that's something to watch out 
+
+example;
+https://codereview.stackexchange.com/questions/123581/golang-flood-fill
 
 ### Tournament day 2
 
