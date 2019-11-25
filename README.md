@@ -25,6 +25,20 @@ https://codereview.stackexchange.com/questions/123581/golang-flood-fill
 
 ### [Upcoming Release] v0.9.0 Tournament day one
 
+### v0.8.7 (2019-11-25) FloodFill
+
+hahaha what a joke this "floodFill"
+
+It just detects a path to my tail in certail steps now....
+
+It does so when above 2 or 3 valid moves.
+
+if SafeMoves >= 2 { ChoosePathToTailIfFoundOnSafeNode }
+
+not quite ready yet...
+
+Score of today:  ( #12 / 52  @ 45.45 pt) ~ 45 point median
+
 ### v0.8.5 (2019-11-19) [Beta] - Back to Basics...
 
 - Changed path to Longest Path To tail when 4 length or less... (MORE MOVEMENT in EARLY PHASE)

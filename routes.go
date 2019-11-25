@@ -86,15 +86,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	tailPos = getTailPos(me)
 	enemySnakes = len(decoded.Board.Snakes) - 1
 	enemyHeadPosList := getEnemyHeadPos(decoded)
-	//foodList := SafeFoodHead(decoded)
-
 	validMoves := len(getPossibleMoves(decoded))
-
-	//log.Println
-	if (nil == moveCoord) {
-		// food is not reachable... no problem.. follow Tail
-		moveCoord = AstarBoard(decoded, tailPos)
-	}
 
 	if (validMoves == 0) {
 		// DEAD!
@@ -173,8 +165,6 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	}
 
 
-	//if(isSafe())
-
 	if (isNextMoveFatal(me, prevMove, nextMove)) {
 		log.Println("Next move (" + nextMove + ") was fatal... new move is: ")
 		nextMove = newPossibleMoves(decoded)
@@ -185,7 +175,23 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		log.Print(nextMove)
 	}
 
-	//mapToGrid(decoded)
+	if (len(getSafeCoordList(decoded)) >= 2) {
+		// Let's check if there are both "Safe" next round...
+		// i.e. is a tail (but moving, since health > 99), so not blockedByTail...
+
+		//  both are valid in 1 move...
+		// but with one is best? (highest floodFill... is better? let's test)
+		// foreach validMoves as Move
+		// check number of nextMoves if reaches tail after 1 spot, then 99999 (for infinite)
+		// best floodFill everrrr because of moving to my own tail)
+		// move with highest score wins...
+		// if equal... then the current valid move stays unchanged
+
+		if (countLongestMoveDir(decoded) != "invalid") {
+				log.Print("2 or more SAFE Moves: Going to tail!!! " + countLongestMoveDir(decoded))
+				nextMove = countLongestMoveDir(decoded)
+		}
+	}
 
 	fmt.Print("T " + strconv.Itoa(decoded.Turn) + " H:" + strconv.Itoa(health) + " E:" + strconv.Itoa(enemySnakes) + " Move: " + nextMove + "\n")
 
@@ -358,6 +364,25 @@ func newPossibleMoves(game SnakeRequest) string {
 /**
 returns list of coords that are possible
 */
+func getSafeCoordList(game SnakeRequest) []Coord {
+	var validCoords = make([]Coord, 0)
+	headPos := game.You.Body[0]
+	//tailPos := getTailPos(game.You)
+	enemySnakes := game.Board.Snakes
+	allCoords := getOpenAjdacentNodes(headPos)
+	for _,coord := range allCoords {
+		dir := Heading(headPos, coord)
+		if (false == isMoveOOB(headPos, dir)) {
+			if (false == NodeBlockedExceptTail(coord, enemySnakes)) {
+				if (isSafe(coord, game)) {
+					validCoords = append(validCoords,coord)
+				}
+			}
+		}
+  }
+		return validCoords
+}
+
 func getPossibleMoves(game SnakeRequest) []Coord {
 	var validCoords = make([]Coord, 0)
 
@@ -376,13 +401,45 @@ func getPossibleMoves(game SnakeRequest) []Coord {
 		return validCoords
 }
 
+func countLongestMoveDir(game SnakeRequest) string {
+	headPos := game.You.Body[0]
+	allCoords := getOpenAjdacentNodes(headPos) // get all open Adjects from my thing
+	longestDir := "invalid"
+	longestDist := -1
+	for _,coord := range allCoords {
+
+		dir := Heading(headPos, coord)
+		dist := CountDirectionFloodFill(game, coord)
+
+			if (isSafe(coord, game)) {
+				// count root from there to the coord!
+				if (dist > longestDist) {
+					// this distance is bigger! let's print it here
+					longestDist = dist
+					longestDir = dir
+					//log.Print("New LONG:" + longestDir + " " + strconv.Itoa(longestDist) + "T")
+				} else {
+					//log.Print("" + dir + ":" + strconv.Itoa(dist) + "T")
+				}
+
+				//log.Print("Got the Most Optimal Route in random move...")
+				//return Heading(headPos, coord)
+				// false == NodeBlockedExceptTail(coord, enemySnakes) ?
+				// if we have a safe Move.. return that one, else... each one is as bad af them..
+			}
+		} // for adjacentNodes
+
+		return longestDir
+}
+
+
+
 func getRandomValidMove(game SnakeRequest) string {
 	headPos := game.You.Body[0]
 	//tailPos := getTailPos(game.You)
 	enemySnakes := game.Board.Snakes
 	allCoords := getOpenAjdacentNodes(headPos)
 	nextDir := "invalid"
-
 
 	for _,coord := range allCoords {
 			if (isSafe(coord, game) && false == NodeBlockedExceptTail(coord, enemySnakes)) {

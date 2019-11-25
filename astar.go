@@ -61,6 +61,95 @@ func reverseCoords(path []Coord) []Coord {
 	return path
 }
 
+// countDirection gives the counts for the moves going into that direction
+func CountDirectionFloodFill(game SnakeRequest, moveCoord Coord) int {
+		closedList := make(map[Coord]bool)
+		openList := make([]Node, 0)
+		pathTracker := make(map[Coord]Coord)
+
+		me := game.You
+		myTailPos := me.Body[len(me.Body) - 1]
+		firstMove  := Node{Coord: moveCoord, G: 0, H: 0, F: 0}
+		openList = append(openList, firstMove)
+		
+		floodFillNodeCount := 1
+
+		for len(openList) > 0 {
+			// get the biggest distance!
+			var closeNode = openList[0]
+			for _, openItem := range openList {
+				if openItem.F > closeNode.F {
+					closeNode = openItem
+				}
+			}
+
+			// put it on the closed list
+			closedList[closeNode.Coord] = true
+			openList = removeFromOpenList(closeNode, openList)
+			// loop through leastNodes's adjacent tiles -- call them T
+			closeNeighbours := GetAdjacentCoords(closeNode.Coord)
+
+			for _, neighbour := range closeNeighbours {
+
+				// 1. If T on the closed list, ignore it
+				if closedList[neighbour] {
+					continue
+				}
+
+
+
+				if neighbour == myTailPos {
+					// we don't have a target... since we want the MAX!
+					// if we hit out tail (and we are <100 health, return 99999 for infinite *opt for -1* )
+					// if neighbour is my tail, i'm always safe.
+					// maybe also implement enemyTails for escape.
+					floodFillNodeCount++
+					closedList[neighbour] = true
+					//return 99999 // infinite! since it's 1 off my tail.
+					return floodFillNodeCount + 999
+					//maxDist = 999
+				}
+
+
+				for _, item := range openList {
+					if neighbour == item.Coord {
+						if NodeBlockedExceptTail(neighbour, game.Board.Snakes) == false && OnBoard(neighbour, game.Board.Height, game.Board.Width) {
+							// floodFillNodeCount++ because it's a tile.
+							//floodFillNodeCount++
+							if (closeNode.G+1)+Dist(neighbour, moveCoord) > item.F {
+								// count dist from MoveCoord to The new item...
+								item.F = (closeNode.G + 1) + Dist(neighbour, moveCoord)
+								item.G = closeNode.G + 1
+								item.H = Dist(neighbour, moveCoord)
+								item.ParentCoords = neighbour
+								pathTracker[item.Coord] = closeNode.Coord
+								floodFillNodeCount++
+							}
+							// if(isThisATailOfEnemy) return 9999
+							// but we just have to count it!
+
+						}
+					}
+				}
+
+
+				// 2. If T is not on the open list add it
+				var openNode = Node{
+					Coord:        neighbour,
+					G:            closeNode.G + 1,
+					H:            Dist(neighbour, moveCoord),
+					F:            (closeNode.G + 1) + (Dist(neighbour, moveCoord)),
+					ParentCoords: closeNode.Coord,
+				}
+
+				pathTracker[neighbour] = closeNode.Coord
+				openList = appendList(openNode, game.Board.Snakes, openList, game.Board.Height, game.Board.Width)
+			}
+		} // end for openList, we are done for this direction.
+
+		return floodFillNodeCount // return longestPath
+}
+
 
 func LongestPath(game SnakeRequest, target Coord) []Coord {
 		closedList := make(map[Coord]bool)
@@ -215,7 +304,7 @@ func AStarBoardFromTo(game SnakeRequest, source Coord, target Coord) []Coord {
 			var openNode = Node{
 				Coord:        neighbour,
 				G:            closeNode.G + 1,
-				H:            Dist(neighbour, target),
+				H:            Dist(neighbour, target), // Heuristic!
 				F:            (closeNode.G + 1) + (Dist(neighbour, target)),
 				ParentCoords: closeNode.Coord,
 			}
