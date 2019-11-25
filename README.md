@@ -22,6 +22,12 @@ but the other side has 3 steps available (only never grows) so that's something 
 
 ### [Upcoming Release] v0.9.0 Tournament day one
 
+### v0.8.7 (2019-11-25) FloodFill
+
+hahaha what a joke this "floodFill"
+for now it'll select the lead of the 2 but only on TWO choices... 3... it's LATER ALIGATOR!
+maybe stuff to 3???
+
 ### v0.8.5 (2019-11-19) [Beta] - Back to Basics...
 
 - Changed path to Longest Path To tail when 4 length or less... (MORE MOVEMENT in EARLY PHASE)
