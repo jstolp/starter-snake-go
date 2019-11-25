@@ -25,8 +25,16 @@ but the other side has 3 steps available (only never grows) so that's something 
 ### v0.8.7 (2019-11-25) FloodFill
 
 hahaha what a joke this "floodFill"
-for now it'll select the lead of the 2 but only on TWO choices... 3... it's LATER ALIGATOR!
-maybe stuff to 3???
+
+It just detects a path to my tail in certail steps now....
+
+It does so when above 2 or 3 valid moves.
+
+if SafeMoves >= 2 { ChoosePathToTailIfFoundOnSafeNode }
+
+not quite ready yet...
+
+Score of today:  ( #12 / 52  @ 45.45 pt) ~ 45 point median
 
 ### v0.8.5 (2019-11-19) [Beta] - Back to Basics...
 
