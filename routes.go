@@ -50,7 +50,7 @@ func Start(res http.ResponseWriter, req *http.Request) {
 
 	fmt.Print("Start Pos: " + strconv.Itoa(headPos.X) + "," + strconv.Itoa(headPos.Y))
 
-	log.Print("Should Be 2... " + strconv.Itoa(len(getOpenAjdacentNodes(Coord{0,0}))))
+	//log.Print("Should Be 2... " + strconv.Itoa(len(getOpenAjdacentNodes(game, Coord{0,0}))))
 
 
 	if (numOfStartingSnakes == 1) {
@@ -80,6 +80,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
 	var moveCoord []Coord
 	turn = decoded.Turn
+	boardHeight, boardWidth = decoded.Board.Height, decoded.Board.Width // SE corner X, Y
 	me := decoded.You
 	health = me.Health
 	headPos = decoded.You.Body[0]
@@ -144,6 +145,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
 	if AstarBoard(decoded, tailPos) == nil {
 		log.Print("TAIL NOT REACHABLE...") // Should do a fillMove (or should've done it the previous move...)
+		nextMove = getRandomValidMove(decoded)
 	}
 
 	if (nil != moveCoord) {
@@ -165,17 +167,21 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	}
 
 
-	if (isNextMoveFatal(me, prevMove, nextMove)) {
-		log.Println("Next move (" + nextMove + ") was fatal... new move is: ")
-		nextMove = newPossibleMoves(decoded)
-		if ("no" == nextMove) {
-			// no safe nextMove... Let's gamble!
-			nextMove = getRandomValidMove(decoded)
-		}
-		log.Print(nextMove)
+	if (nextMove == "") {
+		log.Print("next moves possible: " +  strconv.Itoa(validMoves))
 	}
 
-//	if (len(getSafeCoordList(decoded)) >= 2) {
+//	if (isNextMoveFatal(me, prevMove, nextMove)) {
+//		log.Println("Next move (" + nextMove + ") was fatal... new move is: ")
+//		nextMove = newPossibleMoves(decoded)
+//		if ("no" == nextMove) {
+			// no safe nextMove... Let's gamble!
+//			nextMove = getRandomValidMove(decoded)
+//		}
+//		log.Print(nextMove)
+//	}
+
+	// if (len(getSafeCoordList(decoded)) >= 2) {
 		// Let's check if there are both "Safe" next round...
 		// i.e. is a tail (but moving, since health > 99), so not blockedByTail...
 
@@ -192,7 +198,8 @@ func Move(res http.ResponseWriter, req *http.Request) {
 //				nextMove = countLongestMoveDir(decoded)
 //		}
 //	}
-
+	mapToGrid(decoded)
+	//dd(decoded)
 	fmt.Print("T " + strconv.Itoa(decoded.Turn) + " H:" + strconv.Itoa(health) + " E:" + strconv.Itoa(enemySnakes) + " Move: " + nextMove + "\n")
 
 	respond(res, MoveResponse{
@@ -354,7 +361,7 @@ func newPossibleMoves(game SnakeRequest) string {
 			if (isSafe(coord, game)) {
 				// if it's safe, let's GO
 				return goToDir(game.You.Body[0], coord)
-			} else if (isNodeOnBoard(coord) && !NodeBlockedExceptTail(coord,game.Board.Snakes) ) {
+			} else if (isNodeOnBoard(game, coord) && !NodeBlockedExceptTail(coord, game.Board.Snakes) ) {
 				onlyOption = goToDir(game.You.Body[0], coord)
 				log.Print("My only option is... " + onlyOption)
 			}
@@ -369,10 +376,10 @@ func getSafeCoordList(game SnakeRequest) []Coord {
 	headPos := game.You.Body[0]
 	//tailPos := getTailPos(game.You)
 	enemySnakes := game.Board.Snakes
-	allCoords := getOpenAjdacentNodes(headPos)
+	allCoords := SurroundingCoordinates(headPos)
 	for _,coord := range allCoords {
-		dir := Heading(headPos, coord)
-		if (false == isMoveOOB(headPos, dir)) {
+		//dir := goToDir(headPos, coord)
+		if (isNodeOnBoard(game, coord)) {
 			if (false == NodeBlockedExceptTail(coord, enemySnakes)) {
 				if (isSafe(coord, game)) {
 					validCoords = append(validCoords,coord)
@@ -387,15 +394,16 @@ func getPossibleMoves(game SnakeRequest) []Coord {
 	var validCoords = make([]Coord, 0)
 
 	headPos := game.You.Body[0]
-	//tailPos := getTailPos(game.You)
 	enemySnakes := game.Board.Snakes
-	allCoords := getOpenAjdacentNodes(headPos)
+	allCoords := SurroundingCoordinates(headPos)
 	for _,coord := range allCoords {
-		dir := Heading(headPos, coord)
-		if (false == isMoveOOB(headPos, dir)) {
+
+		if (isNodeOnBoard(game, coord)) {
 			if (false == NodeBlockedExceptTail(coord, enemySnakes)) {
 				validCoords = append(validCoords,coord)
 			}
+		} else {
+			log.Print("move oob")
 		}
   }
 		return validCoords
@@ -403,12 +411,12 @@ func getPossibleMoves(game SnakeRequest) []Coord {
 
 func countLongestMoveDir(game SnakeRequest) string {
 	headPos := game.You.Body[0]
-	allCoords := getOpenAjdacentNodes(headPos) // get all open Adjects from my thing
+	allCoords := getOpenAjdacentNodes(game, headPos) // get all open Adjects from my thing
 	longestDir := "invalid"
 	longestDist := -1
 	for _,coord := range allCoords {
 
-		dir := Heading(headPos, coord)
+		dir := goToDir(headPos, coord)
 		dist := CountDirectionFloodFill(game, coord)
 
 			if (isSafe(coord, game)) {
@@ -423,7 +431,7 @@ func countLongestMoveDir(game SnakeRequest) string {
 				}
 
 				//log.Print("Got the Most Optimal Route in random move...")
-				//return Heading(headPos, coord)
+				//return goToDir(headPos, coord)
 				// false == NodeBlockedExceptTail(coord, enemySnakes) ?
 				// if we have a safe Move.. return that one, else... each one is as bad af them..
 			}
@@ -438,26 +446,26 @@ func getRandomValidMove(game SnakeRequest) string {
 	headPos := game.You.Body[0]
 	//tailPos := getTailPos(game.You)
 	enemySnakes := game.Board.Snakes
-	allCoords := getOpenAjdacentNodes(headPos)
+	allCoords := getOpenAjdacentNodes(game, headPos)
 	nextDir := "invalid"
 
 	for _,coord := range allCoords {
-			if (isSafe(coord, game) && false == NodeBlockedExceptTail(coord, enemySnakes)) {
-				log.Print("Got the Most Optimal Route in random move...")
-				return Heading(headPos, coord)
+			if (isSafe(coord, game) && false == NodeBlockedExceptTail(coord, enemySnakes) && isNodeOnBoard(game,coord)) {
+				log.Print("Got the Most Optimal Route in random move..." + goToDir(headPos, coord))
+				return goToDir(headPos, coord)
 				// if we have a safe Move.. return that one, else... each one is as bad af them..
 			}
 
 			if (false == NodeBlocked(coord, enemySnakes)) {
-				dir := Heading(headPos, coord)
+				dir := goToDir(headPos, coord)
 				//if(game.You.Health > 99 && dist(headPos, tailPos) == 1 && dir == goToDir(headPos, tailPos)) {
 				//	log.Print("skipping " + dir + " as it would crash into tail")
 					// This is Incorrect i guess...
 				//	continue
 				//}
 
-				if (false == isMoveOOB(headPos, dir)) {
-					log.Println("false is move OOB")
+				if (isNodeOnBoard(game, coord)) {
+					log.Println("Move is on the board...")
 					// if nothing better aries, this is the one...
 					nextDir = dir
 				}
@@ -526,11 +534,9 @@ func closestCorner(boardHeight int, boardWidth int, headPos Coord) Coord {
 		return targetCoord
 }
 
-func isNodeOnBoard(target Coord) bool {
-	if target.X < 0 || target.Y < 0 { // TOP LEFT CORDER NE
-		return false
-	}
-	if target.X > boardWidth - 1 || target.Y > boardHeight - 1 { // OOB Protection
+func isNodeOnBoard(game SnakeRequest, target Coord) bool {
+	if target.X > game.Board.Width - 1 || target.Y > game.Board.Height - 1 { // OOB Protection
+		log.Print("Node is not on board above -1")
 		return false
 	}
 	return true
@@ -613,25 +619,25 @@ func shuffle(src []string) []string {
 func countEscapeRoutesFromCoord(search Coord, req SnakeRequest) int {
 	i := 0
 
-	if (isNodeOnBoard(Coord{X: search.X + 1, Y: search.Y})) {
+	if (isNodeOnBoard(req, Coord{X: search.X + 1, Y: search.Y})) {
 		if (isFree(Coord{X: search.X + 1, Y: search.Y}, req)) {
 			i++
 		}
 	}
 
-	if (isNodeOnBoard(Coord{X: search.X - 1, Y: search.Y})) {
+	if (isNodeOnBoard(req, Coord{X: search.X - 1, Y: search.Y})) {
 			if (isFree(Coord{X: search.X - 1, Y: search.Y}, req)) {
 				i++
 		  }
 	}
 
-	if (isNodeOnBoard(Coord{X: search.X, Y: search.Y + 1})) {
+	if (isNodeOnBoard(req, Coord{X: search.X, Y: search.Y + 1})) {
 		if (isFree(Coord{X: search.X, Y: search.Y + 1}, req)) {
 			i++
 		}
 	}
 
-	if (isNodeOnBoard(Coord{X: search.X, Y: search.Y - 1})) {
+	if (isNodeOnBoard(req, Coord{X: search.X, Y: search.Y - 1})) {
 		if (isFree(Coord{X: search.X, Y: search.Y - 1}, req)) {
 			i++
 		}
@@ -639,21 +645,21 @@ func countEscapeRoutesFromCoord(search Coord, req SnakeRequest) int {
 	return i
 }
 
-func getOpenAjdacentNodes(search Coord) []Coord {
+func getOpenAjdacentNodes(game SnakeRequest, search Coord) []Coord {
 	var validCoords = make([]Coord, 0)
 
-	if (isNodeOnBoard(Coord{X: search.X + 1, Y: search.Y})) {
+	if (isNodeOnBoard(game, Coord{X: search.X + 1, Y: search.Y})) {
 		validCoords = append(validCoords, Coord{X: search.X + 1, Y: search.Y})
 	}
 
-	if (isNodeOnBoard(Coord{X: search.X - 1, Y: search.Y})) {
+	if (isNodeOnBoard(game, Coord{X: search.X - 1, Y: search.Y})) {
 		validCoords = append(validCoords, Coord{X: search.X - 1, Y: search.Y})
 	}
 
-	if (isNodeOnBoard(Coord{X: search.X, Y: search.Y + 1})) {
+	if (isNodeOnBoard(game, Coord{X: search.X, Y: search.Y + 1})) {
 		validCoords = append(validCoords, Coord{X: search.X, Y: search.Y + 1})
 	}
-	if (isNodeOnBoard(Coord{X: search.X, Y: search.Y - 1})) {
+	if (isNodeOnBoard(game, Coord{X: search.X, Y: search.Y - 1})) {
 		validCoords = append(validCoords, Coord{X: search.X, Y: search.Y - 1})
 	}
 

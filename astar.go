@@ -71,7 +71,7 @@ func CountDirectionFloodFill(game SnakeRequest, moveCoord Coord) int {
 		myTailPos := me.Body[len(me.Body) - 1]
 		firstMove  := Node{Coord: moveCoord, G: 0, H: 0, F: 0}
 		openList = append(openList, firstMove)
-		
+
 		floodFillNodeCount := 1
 
 		for len(openList) > 0 {
@@ -612,7 +612,7 @@ func NodeBlocked(point Coord, Snakes []Snake) bool {
 
 /* move from coord to coord -> returns MOVE */
 func goToDir(curr Coord, next Coord) string {
-	dir := ""
+	dir := "invalid"
 	if curr.X < next.X {
 		dir = "right"
 	} else if curr.X > next.X {
