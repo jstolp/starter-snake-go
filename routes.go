@@ -175,7 +175,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		log.Print(nextMove)
 	}
 
-	if (len(getSafeCoordList(decoded)) >= 2) {
+//	if (len(getSafeCoordList(decoded)) >= 2) {
 		// Let's check if there are both "Safe" next round...
 		// i.e. is a tail (but moving, since health > 99), so not blockedByTail...
 
@@ -187,11 +187,11 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		// move with highest score wins...
 		// if equal... then the current valid move stays unchanged
 
-		if (countLongestMoveDir(decoded) != "invalid") {
-				log.Print("2 or more SAFE Moves: Going to tail!!! " + countLongestMoveDir(decoded))
-				nextMove = countLongestMoveDir(decoded)
-		}
-	}
+//		if (countLongestMoveDir(decoded) != "invalid") {
+//				log.Print("2 or more SAFE Moves: Going to tail!!! " + countLongestMoveDir(decoded))
+//				nextMove = countLongestMoveDir(decoded)
+//		}
+//	}
 
 	fmt.Print("T " + strconv.Itoa(decoded.Turn) + " H:" + strconv.Itoa(health) + " E:" + strconv.Itoa(enemySnakes) + " Move: " + nextMove + "\n")
 
