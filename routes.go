@@ -79,6 +79,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	}
 
 	var moveCoord []Coord
+
 	turn = decoded.Turn
 	boardHeight, boardWidth = decoded.Board.Height, decoded.Board.Width // SE corner X, Y
 	me := decoded.You
@@ -88,6 +89,8 @@ func Move(res http.ResponseWriter, req *http.Request) {
 	enemySnakes = len(decoded.Board.Snakes) - 1
 	enemyHeadPosList := getEnemyHeadPos(decoded)
 	validMoves := len(getPossibleMoves(decoded))
+
+	moveCoord = nil
 
 	if (validMoves == 0) {
 		// DEAD!
@@ -117,8 +120,10 @@ func Move(res http.ResponseWriter, req *http.Request) {
 					if (len(decoded.You.Body) <= 4) {
 						// too small? WALK! LONG PATH
 							moveCoord = LongestPath(decoded, tailPos)
+							log.Println("LPS")
 					} else {
 							moveCoord = AstarBoard(decoded, tailPos)
+							log.Println("SPF")
 					}
 					// still chaseTail
 				}
@@ -135,9 +140,11 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		if moveCoord == nil {
 			//moveCoord = algorithm.Astar(decoded.Board.Height, decoded.Board.Width, decoded.You, decoded.Board.Snakes, algorithm.ChaseTail(decoded.You.Body))
 			if (len(decoded.You.Body) <= 4) {
+				log.Println("LPS")
 				// too small? WALK! LONG PATH
 					moveCoord = LongestPath(decoded, tailPos)
 			} else {
+						log.Println("SPF")
 					moveCoord = AstarBoard(decoded, tailPos)
 			}
 		}
@@ -145,7 +152,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 
 	if AstarBoard(decoded, tailPos) == nil {
 		log.Print("TAIL NOT REACHABLE...") // Should do a fillMove (or should've done it the previous move...)
-		nextMove = getRandomValidMove(decoded)
+		//nextMove = getRandomValidMove(decoded)
 	}
 
 	if (nil != moveCoord) {
@@ -157,6 +164,7 @@ func Move(res http.ResponseWriter, req *http.Request) {
 		}
 
 	} else {
+		log.Print("LAST POSSIBLE MOVE!")
 		// Path to tail, or food or otherwise not found! fallback
 		// MoveCoord was 0
 		coordList := getPossibleMoves(decoded)
