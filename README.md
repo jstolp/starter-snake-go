@@ -31,6 +31,10 @@ https://codereview.stackexchange.com/questions/123581/golang-flood-fill
 
 ### [Upcoming Release] v0.9.0 Tournament day one
 
+2019-12-10 ranking
+
+position on leaderboard: 16/63 with 45.15 pts
+
 ### v0.8.7 (2019-11-25) FloodFill
 
 hahaha what a joke this "floodFill"
