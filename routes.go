@@ -487,14 +487,14 @@ func getRandomValidMove(game SnakeRequest) string {
  	//return getAnyMove(game) // invalid move
 }
 
-
+// TODO: INVERT AXIS.
 func isMoveOOB(headPos Coord, direction string) bool {
 	switch direction {
-		case "down":
+		case "up":
 			if (headPos.Y + 1 < boardHeight) {
 					return false
 			}
-		case "up":
+		case "down":
 			if (headPos.Y + 1 > 1) {
 				return false
 			}
@@ -534,8 +534,9 @@ func closestCorner(boardHeight int, boardWidth int, headPos Coord) Coord {
 		return targetCoord
 }
 
+// TODO: INVERT AXIS.
 func isNodeOnBoard(target Coord) bool {
-	if target.X < 0 || target.Y < 0 { // TOP LEFT CORDER NE
+	if target.X < 0 || target.Y < 0 { // BOTTOM LEFT CORDER (in version v1 API)
 		return false
 	}
 	if target.X > boardWidth - 1 || target.Y > boardHeight - 1 { // OOB Protection
