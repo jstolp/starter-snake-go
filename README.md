@@ -29,10 +29,6 @@ https://codereview.stackexchange.com/questions/123581/golang-flood-fill
 
 ## Changelog
 
-### 2021-03-14
-
-invert Y-axis... attempt 1 for v1 version of the api
-
 ### 2021-02-28
 
 Updated to V1 of the BattleSnakeAPI
