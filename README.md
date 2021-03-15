@@ -29,6 +29,10 @@ https://codereview.stackexchange.com/questions/123581/golang-flood-fill
 
 ## Changelog
 
+### 2021-02-28
+
+Updated to V1 of the BattleSnakeAPI
+
 ### [Upcoming Release] v0.9.0 Tournament day one
 
 2019-12-10 ranking

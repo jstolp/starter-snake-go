@@ -4,6 +4,7 @@ import (
 	"log"
 	"encoding/json"
 	"net/http"
+	//"./api"
 	. "github.com/jstolp/pofadder-go/api"
 	"fmt"
 	"math"
@@ -34,6 +35,8 @@ var boardWidth int = 0;
 /* SNAKE SETUP */
 var HUNGRY_TRESHOLD int = 40; // defines when snake goes looking for food.
 
+
+
 func Start(res http.ResponseWriter, req *http.Request) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmicroseconds)
 	decoded := SnakeRequest{}
@@ -62,13 +65,18 @@ func Start(res http.ResponseWriter, req *http.Request) {
    00ff55 - green
    ff4f00 - orange test 1 -nee te rood
 	*/
-	respond(res, StartResponse{
-		Color: "#ff00aa",
-		HeadType: "sand-worm",
-		TailType: "curled",
-	})
+	respond(res, StartResponse{})
 }
 
+func RootInfo(res http.ResponseWriter, req *http.Request) {
+    		respond(res, RootInfoResponse{
+    		    ApiVersion: "1",
+    		    Author: "jstolp",
+        		Color: "#ff00aa",
+        		HeadType: "sand-worm",
+        		TailType: "curled",
+        	})
+}
 
 func Move(res http.ResponseWriter, req *http.Request) {
 	nextMove = prevMove
@@ -708,10 +716,7 @@ func minifyPrint(obj interface{}) {
 		fmt.Println(strings.Replace(string(data), " ", "", -1))
 	}
 }
-func Ping(res http.ResponseWriter, req *http.Request) {
-	log.Print("PONG to a server ping... \n")
-	return
-}
+
 
 func favicon(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "favicon.ico")

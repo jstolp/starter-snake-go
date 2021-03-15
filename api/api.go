@@ -34,6 +34,14 @@ type Game struct {
   ID string `json:"id"`
 }
 
+type RootInfoResponse struct {
+  ApiVersion string `json:"apiversion"`
+  Author string `json:"author"`
+  Color string `json:"color"`
+  HeadType string `json:"head"`
+  TailType string `json:"tail"`
+}
+
 type SnakeRequest struct {
   Game  Game  `json:"game"`
   Turn  int   `json:"turn"`

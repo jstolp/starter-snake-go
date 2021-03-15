@@ -9,10 +9,11 @@ import (
 )
 
 func main() {
+    http.HandleFunc("/", RootInfo)
 	http.HandleFunc("/start", Start)
 	http.HandleFunc("/move", Move)
 	http.HandleFunc("/end", End)
-	http.HandleFunc("/ping", Ping)
+	// http.HandleFunc("/ping", Ping) - Ping is deprecated in version v1 of the bs api
 	http.HandleFunc("/favicon.ico", favicon)
 
 	port := os.Getenv("PORT")
